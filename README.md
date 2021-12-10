@@ -1,6 +1,6 @@
 # Tips
 
-To run the developement on an Adnroid Device use command:
+To run the developement on an Android Device use command:
 
 > ionic cordova run android -l
 
