@@ -1,0 +1,21 @@
+.header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+
+  ion-icon {
+    font-size: 3em;
+  }
+
+  ion-toolbar {
+    position: absolute;
+    --background: none;
+  }
+
+  ion-button {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 600;
+  }
+}
