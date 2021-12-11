@@ -162,10 +162,10 @@ const startScan = () => {
       Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).forEach(d => startScanSuccess(d));
       //Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] });
 
-    } else if (Tab1Page.device.platform === 'IOS') {
+    } else if (Tab1Page.device.platform === 'iOS') {
 
       log('Jetzt kommt startScan für IOS', 'status');
-      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true });
+      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).forEach(d => startScanSuccess(d));
 
     }
   }
