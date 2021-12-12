@@ -152,22 +152,31 @@ const switchScanState = () => {
 
   Tab1Page.bluetoothle.isScanning().then((status) => {
     if(!status.isScanning) {
+
       Tab1Page.bluetoothle.hasPermission().then((readySource) => {
-        //log('Permission is allowed: ' + readySource.hasPermission, 'status');
 
         if(!readySource.hasPermission) {
-          Tab1Page.bluetoothle.requestPermission(/*requestPermissionSuccess, handleError*/);
+          Tab1Page.bluetoothle.requestPermission().then((permissionStatus) => {
+            if(permissionStatus.requestPermission) {
+              log('Permission granted', 'success');
+            } else {
+              log('Permission denied', 'error');
+            }
+          });
         }
-
       });
 
       Tab1Page.bluetoothle.isLocationEnabled().then((readySource) => {
-        //log('Use of Location is allowed: ' + readySource.isLocationEnabled, 'status');
 
         if(!readySource.isLocationEnabled) {
-          Tab1Page.bluetoothle.requestLocation(/*requestLocationSuccess, handleError*/);
+          Tab1Page.bluetoothle.requestLocation().then((locatioStatus) => {
+            if(locatioStatus.requestLocation) {
+              log('Location activated', 'success');
+            } else {
+              log('Location denied', 'error');
+            }
+          });
         }
-
       });
 
       if(Tab1Page.device.platform === 'Android') {
