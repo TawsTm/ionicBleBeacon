@@ -163,7 +163,7 @@ const startScan = () => {
     } else if (Tab1Page.device.platform === 'iOS') {
 
       Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).
-      forEach(d => startScanSuccess(d));
+      subscribe(result => startScanSuccess(result));
 
     }
   }
