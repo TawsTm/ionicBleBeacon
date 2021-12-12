@@ -181,7 +181,8 @@ const switchScanState = () => {
 
       if(Tab1Page.device.platform === 'Android') {
 
-        Tab1Page.bluetoothle.startScan({ services: [] }).subscribe(result => startScanSuccess(result));
+        Tab1Page.bluetoothle.startScan({ allowDuplicates: true })
+        .subscribe(result => startScanSuccess(result));
 
       } else if (Tab1Page.device.platform === 'iOS') {
 
@@ -191,6 +192,9 @@ const switchScanState = () => {
       }
     } else {
       Tab1Page.bluetoothle.stopScan();
+      log('Stopping Scan...', 'status');
+      const devicesContainer: HTMLElement = document.getElementById('devices');
+      devicesContainer.innerHTML = '';
     }
   });
 
