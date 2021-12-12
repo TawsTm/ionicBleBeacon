@@ -141,8 +141,10 @@ const startScan = () => {
   } else {
 
     //There should be a good balance between scanning and pausing, so the Battery doesnt drain.
-    const intervalID = setInterval(switchScanState, 500);
-    log(intervalID, 'status');
+    /*const intervalID = setInterval(switchScanState, 500);
+    log(intervalID, 'status');*/
+
+    switchScanState();
   }
 };
 
@@ -154,7 +156,7 @@ const switchScanState = () => {
         //log('Permission is allowed: ' + readySource.hasPermission, 'status');
 
         if(!readySource.hasPermission) {
-          Tab1Page.bluetoothle.requestPermission(requestPermissionSuccess, handleError);
+          Tab1Page.bluetoothle.requestPermission(/*requestPermissionSuccess, handleError*/);
         }
 
       });
@@ -163,18 +165,18 @@ const switchScanState = () => {
         //log('Use of Location is allowed: ' + readySource.isLocationEnabled, 'status');
 
         if(!readySource.isLocationEnabled) {
-          Tab1Page.bluetoothle.requestLocation(requestLocationSuccess, handleError);
+          Tab1Page.bluetoothle.requestLocation(/*requestLocationSuccess, handleError*/);
         }
 
       });
 
       if(Tab1Page.device.platform === 'Android') {
 
-        Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).subscribe(result => startScanSuccess(result));
+        Tab1Page.bluetoothle.startScan({ services: [] }).subscribe(result => startScanSuccess(result));
 
       } else if (Tab1Page.device.platform === 'iOS') {
 
-        Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true })
+        Tab1Page.bluetoothle.startScan({ allowDuplicates: true })
         .subscribe(result => startScanSuccess(result));
 
       }
@@ -185,7 +187,7 @@ const switchScanState = () => {
 
 };
 
-const requestPermissionSuccess = (_result) => {
+/*const requestPermissionSuccess = (_result) => {
   if(_result.requestPermission === true) {
     log('Permission allowed!', 'status');
   } else {
@@ -201,7 +203,7 @@ const requestLocationSuccess = (_result) => {
     log('Location denied, but needed!', 'status');
     Tab1Page.bluetoothle.requestLocation(requestLocationSuccess, handleError);
   }
-};
+};*/
 
 const startScanSuccess = (_result) => {
 
