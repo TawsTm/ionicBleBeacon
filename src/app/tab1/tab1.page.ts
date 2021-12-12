@@ -17,9 +17,9 @@ export class Tab1Page implements AfterViewInit {
   public static device: Device;
   public static bluetoothle: BluetoothLE;
 
-  constructor(private _device: Device, public _bluetoothle: BluetoothLE, public plt: Platform) {
+  constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform) {
 
-    new Promise((resolve) => this.plt.ready().then((readySource) => {
+    new Promise((resolve) => this._plt.ready().then((readySource) => {
 
       console.log('Platform ready from', readySource);
       Tab1Page.device = this._device;
@@ -43,9 +43,9 @@ const scan = () => {
 };
 
 //Überprüfung ob Bluetooth aktiviert ist und somit der Adapter verwendet werden kann.
-const initializeSuccess = (result) => {
+const initializeSuccess = (_result) => {
 
-  if (result.status === 'enabled') {
+  if (_result.status === 'enabled') {
 
     log('Bluetooth is enabled.', 'status');
 
@@ -57,58 +57,58 @@ const initializeSuccess = (result) => {
 };
 
 //Wenn ein Error beim Scan auftritt
-const handleError = (error) => {
+const handleError = (_error) => {
 
   log('Es ist ein Fehler aufgetreten!', 'error');
 
   let msg;
 
-  if (error.error && error.message) {
+  if (_error.error && _error.message) {
 
     const errorItems = [];
 
-    if (error.service) {
-        errorItems.push('service: ' + (error.service || error.service));
+    if (_error.service) {
+        errorItems.push('service: ' + (_error.service || _error.service));
     }
 
-    if (error.characteristic) {
-        errorItems.push('characteristic: ' + (error.characteristic || error.characteristic));
+    if (_error.characteristic) {
+        errorItems.push('characteristic: ' + (_error.characteristic || _error.characteristic));
     }
 
-    msg = 'Error on ' + error.error + ': ' + error.message + (errorItems.length && (' (' + errorItems.join(', ') + ')'));
+    msg = 'Error on ' + _error.error + ': ' + _error.message + (errorItems.length && (' (' + errorItems.join(', ') + ')'));
   }
 
   else {
-    msg = error;
+    msg = _error;
   }
 
   document.getElementById('console2').innerHTML = msg;
 
-  log(error, 'error');
+  log(_error, 'error');
 
-  if (error.error === 'read' && error.service && error.characteristic) {
-      reportValue(error.service, error.characteristic, 'Error: ' + error.message);
+  if (_error.error === 'read' && _error.service && _error.characteristic) {
+      reportValue(_error.service, _error.characteristic, 'Error: ' + _error.message);
   }
 };
 
 // Um dem Nutzer Output zu zeigen und zum debuggen.
-const log = (msg, level?) => {
+const log = (_msg, _level?) => {
 
-  level = level || 'log';
+  _level = _level || 'log';
 
-  if (typeof msg === 'object') {
+  if (typeof _msg === 'object') {
 
-      msg = JSON.stringify(msg, null, '  ');
+      _msg = JSON.stringify(_msg, null, '  ');
   }
 
-  console.log(msg);
+  console.log(_msg);
 
-  if (level === 'status' || level === 'error') {
+  if (_level === 'status' || _level === 'error') {
 
       const msgDiv = document.createElement('div');
-      msgDiv.textContent = msg;
+      msgDiv.textContent = _msg;
 
-      if (level === 'error') {
+      if (_level === 'error') {
 
           msgDiv.style.color = 'red';
       }
@@ -159,20 +159,22 @@ const startScan = () => {
     if(Tab1Page.device.platform === 'Android') {
 
       //Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).forEach(d => log(d, 'status'));
-      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).forEach(d => startScanSuccess(d));
+      //Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).forEach(d => startScanSuccess(d));
+      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).subscribe(result => startScanSuccess(result));
       //Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] });
 
     } else if (Tab1Page.device.platform === 'iOS') {
 
       log('Jetzt kommt startScan für IOS', 'status');
-      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).forEach(d => startScanSuccess(d));
+      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).
+      forEach(d => startScanSuccess(d));
 
     }
   }
 };
 
-const requestPermissionSuccess = (result) => {
-  if(result.requestPermission === true) {
+const requestPermissionSuccess = (_result) => {
+  if(_result.requestPermission === true) {
     log('Permission allowed!', 'status');
   } else {
     log('Permission denied, but needed!', 'status');
@@ -180,8 +182,8 @@ const requestPermissionSuccess = (result) => {
   }
 };
 
-const requestLocationSuccess = (result) => {
-  if(result.requestLocation === true) {
+const requestLocationSuccess = (_result) => {
+  if(_result.requestLocation === true) {
     log('Location allowed!', 'status');
   } else {
     log('Location denied, but needed!', 'status');
@@ -189,33 +191,33 @@ const requestLocationSuccess = (result) => {
   }
 };
 
-const startScanSuccess = (result) => {
+const startScanSuccess = (_result) => {
 
   //log('startScanSuccess(' + result.status + ')', 'status');
 
-  if (result.status === 'scanStarted') {
+  if (_result.status === 'scanStarted') {
 
     log('Scanning for devices (will continue to scan until you select a device)...', 'status');
   }
-  else if (result.status === 'scanResult') {
+  else if (_result.status === 'scanResult') {
 
     //log('ScanResult', 'status');
 
     if (!Tab1Page.devices.some((device) =>
-      device.address === result.address
+      device.address === _result.address
     )) {
       log('Device:', 'status');
 
-      log(result.rssi, 'status');
-      log(result.address, 'status');
-      log(result.name, 'status');
-      Tab1Page.devices.push(result);
+      log(_result.rssi, 'status');
+      log(_result.address, 'status');
+      log(_result.name, 'status');
+      Tab1Page.devices.push(_result);
       //addDevice(result.name, result.address);
     } else {
       //Update RSSI For Devices
       for (const device of Tab1Page.devices) {
-        if(device.address === result.address) {
-          device.rssi = result.rssi;
+        if(device.address === _result.address) {
+          device.rssi = _result.rssi;
         }
       }
     }
@@ -229,26 +231,26 @@ const startAdvertising = () => {
   //Tab1Page.bluetoothle.startAdvertising(startAdvertisingSuccess, handleError, { services: [] });
 };
 
-const startAdvertisingSuccess = (result) => {
-  log('startAdvertisingSuccess(' + result.status + ')', 'status');
-  if (result.status === 'advertisingStarted') {
+const startAdvertisingSuccess = (_result) => {
+  log('startAdvertisingSuccess(' + _result.status + ')', 'status');
+  if (_result.status === 'advertisingStarted') {
     log('Advertising for devices (will continue to scan until you stop)...', 'status');
   } else {
     log('Something with the Advertising went wrong!', 'error');
   }
 };
 
-const retrieveConnectedSuccess = (result) => {
+const retrieveConnectedSuccess = (_result) => {
 
   log('retrieveConnectedSuccess()');
-  log(result);
+  log(_result);
 
-  result.forEach((device) => {
+  _result.forEach((device) => {
       addDevice(device.name, device.address);
   });
 };
 
-const addDevice = (name, address) => {
+const addDevice = (_name, _address) => {
 
   let doConnect = false;
 
@@ -256,7 +258,7 @@ const addDevice = (name, address) => {
   button.style.width = '100%';
   button.style.padding = '10px';
   button.style.fontSize = '16px';
-  button.textContent = name + ': ' + address;
+  button.textContent = _name + ': ' + _address;
 
   button.addEventListener('click', () => {
 
@@ -265,16 +267,16 @@ const addDevice = (name, address) => {
   });
 
   if(doConnect) {
-    connect(address);
+    connect(_address);
     doConnect = false;
   }
 
   document.getElementById('devices').appendChild(button);
 };
 
-const connect = (address) => {
+const connect = (_address) => {
 
-  log('Connecting to device: ' + address + '...', 'status');
+  log('Connecting to device: ' + _address + '...', 'status');
 
   if (Tab1Page.device.platform === 'windows') {
 
@@ -316,27 +318,27 @@ const stopScanSuccess = () => {
   }
 };
 
-const connectSuccess = (result) => {
+const connectSuccess = (_result) => {
 
-  log('- ' + result.status);
+  log('- ' + _result.status);
 
-  if (result.status === 'connected') {
+  if (_result.status === 'connected') {
 
     //Weitere Verbindungsmöglichkeiten sind noch nicht notwendig.
-    log('The Divece is connected!: ' + result.address, 'status');
+    log('The Divece is connected!: ' + _result.address, 'status');
       //this.getDeviceServices(result.address);
   }
-  else if (result.status === 'disconnected') {
+  else if (_result.status === 'disconnected') {
 
-      log('Disconnected from device: ' + result.address, 'status');
+      log('Disconnected from device: ' + _result.address, 'status');
   }
 };
 
 
 
-const reportValue = (serviceUuid, characteristicUuid, value) => {
+const reportValue = (_serviceUuid, _characteristicUuid, _value) => {
 
-  document.getElementById(serviceUuid + '.' + characteristicUuid).textContent = value;
+  document.getElementById(_serviceUuid + '.' + _characteristicUuid).textContent = _value;
 };
 
 
