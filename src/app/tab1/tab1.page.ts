@@ -120,7 +120,7 @@ const log = (_msg, _level?) => {
 
 const startScan = () => {
 
-  log('Starting scan for devices...', 'status');
+  //log('Starting scan for devices...', 'status');
 
 
   Tab1Page.devices = [];
@@ -135,38 +135,47 @@ const startScan = () => {
 
   } else {
 
-    Tab1Page.bluetoothle.hasPermission().then((readySource) => {
-      log('Permission is allowed: ' + readySource.hasPermission, 'status');
-
-      if(!readySource.hasPermission) {
-        Tab1Page.bluetoothle.requestPermission(requestPermissionSuccess, handleError);
-      }
-
-    });
-
-    Tab1Page.bluetoothle.isLocationEnabled().then((readySource) => {
-      log('Use of Location is allowed: ' + readySource.isLocationEnabled, 'status');
-
-      if(!readySource.isLocationEnabled) {
-        Tab1Page.bluetoothle.requestLocation(requestLocationSuccess, handleError);
-      }
-
-    });
-
-    if(Tab1Page.device.platform === 'Android') {
-
-      //Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).forEach(d => log(d, 'status'));
-      //Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).forEach(d => startScanSuccess(d));
-      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).subscribe(result => startScanSuccess(result));
-      //Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] });
-
-    } else if (Tab1Page.device.platform === 'iOS') {
-
-      Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).
-      subscribe(result => startScanSuccess(result));
-
-    }
+    //There should be a good balance between scanning and pausing, so the Battery doesnt drain.
+    let intervalID = setInterval(switchScanState, 500);
   }
+};
+
+const switchScanState = () => {
+
+  Tab1Page.bluetoothle.isScanning().then((status) => {
+    if(!status.isScanning) {
+      Tab1Page.bluetoothle.hasPermission().then((readySource) => {
+        //log('Permission is allowed: ' + readySource.hasPermission, 'status');
+  
+        if(!readySource.hasPermission) {
+          Tab1Page.bluetoothle.requestPermission(requestPermissionSuccess, handleError);
+        }
+  
+      });
+  
+      Tab1Page.bluetoothle.isLocationEnabled().then((readySource) => {
+        //log('Use of Location is allowed: ' + readySource.isLocationEnabled, 'status');
+  
+        if(!readySource.isLocationEnabled) {
+          Tab1Page.bluetoothle.requestLocation(requestLocationSuccess, handleError);
+        }
+  
+      });
+  
+      if(Tab1Page.device.platform === 'Android') {
+  
+        Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).subscribe(result => startScanSuccess(result));
+  
+      } else if (Tab1Page.device.platform === 'iOS') {
+  
+        Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).subscribe(result => startScanSuccess(result));
+  
+      }
+    } else {
+      Tab1Page.bluetoothle.stopScan();
+    }
+  });
+  
 };
 
 const requestPermissionSuccess = (_result) => {
