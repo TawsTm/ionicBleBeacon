@@ -16,6 +16,7 @@ export class Tab1Page implements OnInit {
   public device: Device;
   public bluetoothle: BluetoothLE;
   public devices: any[] = [];
+  public chartElements: Chartelement[] = [];
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform) {
 
@@ -36,34 +37,64 @@ export class Tab1Page implements OnInit {
   ngOnInit() {
     document.getElementById('scan-button').addEventListener('click', this.startScan);
     document.getElementById('advertise-button').addEventListener('click', this.startAdvertising);
-    this.makeChart();
   }
 
-  makeChart() {
-    Chart.register(...registerables);
+  makeChart(_device) {
+    let newDevice = true;
+    this.chartElements.forEach(chartElement => {
+      if (chartElement.device.address === _device.address) {
 
-    const myChart = new Chart(document.getElementById('myChart') as ChartItem, {
-    type: 'line',
-    data: {
-        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-        datasets: [{
-            label: '# of Votes',
-            data: [12, 19, 3, 5, 2, 3],
-            backgroundColor:
-                'rgba(255, 99, 132, 0.2)',
-            borderColor:
-                'rgba(255, 99, 132, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true
-            }
+        newDevice = false;
+        //Update
+        if(chartElement.rssi.length > 5) {
+          chartElement.rssi.shift();
         }
+        chartElement.rssi.push(_device.rssi);
+        chartElement.chart.update();
+      }
+    });
+
+    if(newDevice) {
+
+      const newChartElement: Chartelement = {chart: null, device: _device, rssi: [_device.rssi]};
+
+      Chart.register(...registerables);
+
+      const htmlElementContainer = document.createElement('div');
+      const htmlElement = document.createElement('canvas');
+      htmlElement.id = _device.address;
+      htmlElementContainer.appendChild(htmlElement);
+
+      document.getElementById('BLEStatus').appendChild(htmlElementContainer);
+
+      const myChart = new Chart(document.getElementById(_device.address) as ChartItem, {
+      type: 'line',
+      data: {
+          labels: ['-5', '-4', '-3', '-2', '-1', '0'],
+          datasets: [{
+              label: 'RSSI over Time',
+              data: newChartElement.rssi,
+              backgroundColor:
+                  'rgba(50, 100, 255, 0.2)',
+              borderColor:
+                  'rgba(50, 100, 255, 1)',
+              borderWidth: 1,
+          }]
+      },
+      options: {
+          scales: {
+              y: {
+                  beginAtZero: false,
+                  max: -20,
+                  min: -120,
+              }
+          }
+        },
+      });
+      newChartElement.chart = myChart;
+      this.chartElements.push(newChartElement);
     }
-  });
+
   }
 
 
@@ -170,8 +201,7 @@ export class Tab1Page implements OnInit {
     } else {
 
       //There should be a good balance between scanning and pausing, so the Battery doesnt drain.
-      /*const intervalID = setInterval(switchScanState, 500);
-      log(intervalID, 'status');*/
+      const intervalID = setInterval(this.updateDeviceList, 1000);
 
       this.switchScanState();
     }
@@ -259,7 +289,7 @@ export class Tab1Page implements OnInit {
       )) {
 
         this.devices.push(_result);
-        this.updateDeviceList();
+        //this.updateDeviceList();
 
         //addDevice(result.name, result.address);
       } else {
@@ -269,7 +299,7 @@ export class Tab1Page implements OnInit {
             device.rssi = _result.rssi;
           }
         }
-        this.updateDeviceList();
+        //this.updateDeviceList();
       }
     }
   };
@@ -280,6 +310,7 @@ export class Tab1Page implements OnInit {
 
     this.devices.forEach(device => {
       this.createDeviceElement(device);
+      this.makeChart(device);
     });
   };
 
@@ -445,4 +476,10 @@ export class Tab1Page implements OnInit {
     })
   }
   */
+}
+
+interface Chartelement {
+  chart: Chart;
+  device: any;
+  rssi: number[];
 }
