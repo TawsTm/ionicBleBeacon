@@ -23,6 +23,7 @@
     "@awesome-cordova-plugins/core": "^5.37.1",
     "@awesome-cordova-plugins/device": "^5.37.1",
     "@ionic/angular": "^5.5.2",
+    "chart.js": "^3.6.2",
     "cordova-ios": "6.2.0",
     "rxjs": "^7.3.0",
     "tslib": "^2.2.0",
