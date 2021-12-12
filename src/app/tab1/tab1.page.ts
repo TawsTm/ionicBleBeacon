@@ -43,11 +43,11 @@ const initializeSuccess = (_result) => {
 
   if (_result.status === 'enabled') {
 
-    log('Bluetooth is enabled.', 'status');
+    log('Bluetooth is enabled.', 'success');
 
   } else {
 
-    log('Bluetooth is not enabled:', 'status');
+    log('Bluetooth is not enabled:', 'error');
 
   }
 };
@@ -99,7 +99,7 @@ const log = (_msg, _level?) => {
 
   console.log(_msg);
 
-  if (_level === 'status' || _level === 'error') {
+  if (_level === 'status' || _level === 'error' || _level === 'success') {
 
       const msgDiv = document.createElement('div');
       msgDiv.textContent = _msg;
@@ -107,8 +107,13 @@ const log = (_msg, _level?) => {
       if (_level === 'error') {
 
         msgDiv.style.color = 'red';
-      } else {
+
+      } else if (_level === 'success') {
+
         msgDiv.style.color = 'green';
+
+      } else {
+        msgDiv.style.color = 'rgb(192,192,192)';
       }
 
       msgDiv.style.padding = '5px 0';
@@ -136,7 +141,8 @@ const startScan = () => {
   } else {
 
     //There should be a good balance between scanning and pausing, so the Battery doesnt drain.
-    let intervalID = setInterval(switchScanState, 500);
+    const intervalID = setInterval(switchScanState, 500);
+    log(intervalID, 'status');
   }
 };
 
@@ -146,36 +152,37 @@ const switchScanState = () => {
     if(!status.isScanning) {
       Tab1Page.bluetoothle.hasPermission().then((readySource) => {
         //log('Permission is allowed: ' + readySource.hasPermission, 'status');
-  
+
         if(!readySource.hasPermission) {
           Tab1Page.bluetoothle.requestPermission(requestPermissionSuccess, handleError);
         }
-  
+
       });
-  
+
       Tab1Page.bluetoothle.isLocationEnabled().then((readySource) => {
         //log('Use of Location is allowed: ' + readySource.isLocationEnabled, 'status');
-  
+
         if(!readySource.isLocationEnabled) {
           Tab1Page.bluetoothle.requestLocation(requestLocationSuccess, handleError);
         }
-  
+
       });
-  
+
       if(Tab1Page.device.platform === 'Android') {
-  
+
         Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [] }).subscribe(result => startScanSuccess(result));
-  
+
       } else if (Tab1Page.device.platform === 'iOS') {
-  
-        Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).subscribe(result => startScanSuccess(result));
-  
+
+        Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true })
+        .subscribe(result => startScanSuccess(result));
+
       }
     } else {
       Tab1Page.bluetoothle.stopScan();
     }
   });
-  
+
 };
 
 const requestPermissionSuccess = (_result) => {
