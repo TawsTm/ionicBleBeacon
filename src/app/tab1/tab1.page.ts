@@ -22,6 +22,7 @@ export class Tab1Page implements AfterViewInit {
     new Promise((resolve) => this._plt.ready().then((readySource) => {
 
       console.log('Platform ready from', readySource);
+      log('My Address is: ' + _device.uuid, 'status');
       Tab1Page.device = this._device;
       Tab1Page.bluetoothle = this._bluetoothle;
       Tab1Page.bluetoothle.initialize(resolve, { request: true, statusReceiver: false }).subscribe(ble => {
@@ -36,11 +37,6 @@ export class Tab1Page implements AfterViewInit {
     document.getElementById('advertise-button').addEventListener('click', startAdvertising);
   }
 }
-
-//Start des Scans
-const scan = () => {
-    log('Jetzt aber', 'status');
-};
 
 //Überprüfung ob Bluetooth aktiviert ist und somit der Adapter verwendet werden kann.
 const initializeSuccess = (_result) => {
@@ -110,12 +106,15 @@ const log = (_msg, _level?) => {
 
       if (_level === 'error') {
 
-          msgDiv.style.color = 'red';
+        msgDiv.style.color = 'red';
+      } else {
+        msgDiv.style.color = 'green';
       }
 
       msgDiv.style.padding = '5px 0';
       msgDiv.style.borderBottom = 'rgb(192,192,192) solid 1px';
-      document.getElementById('console').appendChild(msgDiv);
+      const consoleContainer = document.getElementById('console');
+      consoleContainer.appendChild(msgDiv);
   }
 };
 
@@ -135,8 +134,6 @@ const startScan = () => {
     Tab1Page.bluetoothle.retrieveConnected(retrieveConnectedSuccess, handleError, {});
 
   } else {
-
-    log('Es ist ein ' + Tab1Page.device.platform + ' Gerät', 'status');
 
     Tab1Page.bluetoothle.hasPermission().then((readySource) => {
       log('Permission is allowed: ' + readySource.hasPermission, 'status');
@@ -165,7 +162,6 @@ const startScan = () => {
 
     } else if (Tab1Page.device.platform === 'iOS') {
 
-      log('Jetzt kommt startScan für IOS', 'status');
       Tab1Page.bluetoothle.startScan(startScanSuccess, handleError, { services: [], allowDuplicates: true }).
       forEach(d => startScanSuccess(d));
 
@@ -193,25 +189,18 @@ const requestLocationSuccess = (_result) => {
 
 const startScanSuccess = (_result) => {
 
-  //log('startScanSuccess(' + result.status + ')', 'status');
-
   if (_result.status === 'scanStarted') {
-
-    log('Scanning for devices (will continue to scan until you select a device)...', 'status');
+    log('Scanning for devices...', 'status');
   }
   else if (_result.status === 'scanResult') {
-
-    //log('ScanResult', 'status');
 
     if (!Tab1Page.devices.some((device) =>
       device.address === _result.address
     )) {
-      log('Device:', 'status');
 
-      log(_result.rssi, 'status');
-      log(_result.address, 'status');
-      log(_result.name, 'status');
       Tab1Page.devices.push(_result);
+      updateDeviceList();
+
       //addDevice(result.name, result.address);
     } else {
       //Update RSSI For Devices
@@ -220,8 +209,45 @@ const startScanSuccess = (_result) => {
           device.rssi = _result.rssi;
         }
       }
+      updateDeviceList();
     }
   }
+};
+
+const updateDeviceList = () => {
+  const devicesContainer: HTMLElement = document.getElementById('devices');
+  devicesContainer.innerHTML = '';
+
+  Tab1Page.devices.forEach(device => {
+    createDeviceElement(device);
+  });
+};
+
+const createDeviceElement = (_device) => {
+
+  const devicesContainer: HTMLElement = document.getElementById('devices');
+
+  //Create a Container for every new Device
+  const singleDeviceContainer = document.createElement('div');
+  singleDeviceContainer.style.borderBottom = 'rgb(192,192,192) solid 1px';
+
+  const deviceAddress = document.createElement('p');
+  deviceAddress.innerHTML = 'Device: <b>' + JSON.stringify(_device.address) + '</b>';
+  singleDeviceContainer.appendChild(deviceAddress);
+
+  const deviceRssi = document.createElement('p');
+  deviceRssi.innerHTML = 'RSSI: ' + JSON.stringify(_device.rssi);
+  singleDeviceContainer.appendChild(deviceRssi);
+
+  if(_device.name) {
+
+    const deviceName = document.createElement('p');
+    deviceName.innerHTML = JSON.stringify(_device.name);
+    singleDeviceContainer.appendChild(deviceName);
+
+  }
+
+  devicesContainer.appendChild(singleDeviceContainer);
 };
 
 const startAdvertising = () => {

@@ -26,13 +26,15 @@
 <ion-content [fullscreen]="true">
 
   <ion-list>
+    <ion-card-content id="console-container">
+      <p id="console"></p>
+    </ion-card-content>
+
     <ion-card-content>
       <p id="BLEStatus"></p>
       <p id="devices"></p>
       <p id="services"></p>
       <p id="output"></p>
-      <p id="console"></p>
-      <p id="console2"></p>
     </ion-card-content>
     <!--<ion-card-content ion-item *ngFor="let device of Tab1Page.devices">
       <p>{{device.name || 'Unnamed'}}</p>

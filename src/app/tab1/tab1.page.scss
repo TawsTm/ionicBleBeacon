@@ -19,3 +19,18 @@
     font-size: 600;
   }
 }
+
+ion-list {
+  padding: 0;
+
+  #console-container {
+    background-color: black;
+    max-height: 25vh;
+    overflow-y: scroll;
+
+    #console {
+
+    }
+  }
+}
+
