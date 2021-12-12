@@ -14,6 +14,8 @@ import {Chart, ChartItem, registerables} from 'node_modules/chart.js';
 export class Tab1Page implements OnInit {
 
   public device: Device;
+  //For the right HTML Mode
+  public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
   public devices: any[] = [];
   public chartElements: Chartelement[] = [];
@@ -244,6 +246,8 @@ export class Tab1Page implements OnInit {
           .subscribe(result => this.startScanSuccess(result));
 
         } else if (this.device.platform === 'iOS') {
+
+          this.deviceMode = 'ios';
 
           this.bluetoothle.startScan({ allowDuplicates: true })
           .subscribe(result => this.startScanSuccess(result));
