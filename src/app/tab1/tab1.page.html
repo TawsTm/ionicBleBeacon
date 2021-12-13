@@ -21,6 +21,12 @@
 
 </ion-header>
 
+<div *ngFor="let device of deviceList" class="device">
+  <p>Device: <b>{{device.device.address}}</b></p>
+  <p>RSSI: {{device.device.rssi}}</p>
+  <p *ngIf="device.device.name">{{device.device.name}}</p>
+</div>
+
 <ion-content>
 
   <ion-list>
@@ -29,8 +35,14 @@
     </ion-card-content>
 
     <ion-card-content>
-      <p id="BLEStatus"></p>
-      <p id="devices"></p>
+
+    </ion-card-content>
+
+    <ion-card-content>
+      <div id="BLEStatus"></div>
+      <div id="devices">
+
+      </div>
       <p id="services"></p>
       <p id="output"></p>
     </ion-card-content>
