@@ -43,3 +43,8 @@ ion-list {
   width: 400px;
   height: 400px;
 }
+
+#BLEStatus {
+  max-height: 200px;
+  overflow-y: scroll;
+}

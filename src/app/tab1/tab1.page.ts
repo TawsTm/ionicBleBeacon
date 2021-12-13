@@ -17,11 +17,11 @@ export class Tab1Page implements OnInit {
   //For the right HTML Mode
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
-  public deviceList: DevicePackage[] = [];
-  public devices: any[] = [];
+  public deviceList: DevicePackage[] = [{canvasElement: null, chart: null, device: 'jkfd', rssi: [1,2 ,3 ]}];
   public chartElements: Chartelement[] = [];
 
-  constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform) {
+  constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
+              private changeDetection: ChangeDetectorRef) {
 
     new Promise((resolve) => this._plt.ready().then((readySource) => {
 
@@ -43,34 +43,15 @@ export class Tab1Page implements OnInit {
   }
 
   makeChart(_device): DevicePackage {
-    /*let newDevice = true;
-    this.chartElements.forEach(chartElement => {
-      if (chartElement.device.address === _device.address) {
-
-        newDevice = false;
-        //Update
-        if(chartElement.rssi.length > 5) {
-          chartElement.rssi.shift();
-        }
-        chartElement.rssi.push(_device.rssi);
-        chartElement.chart.data.datasets[0].backgroundColor =
-        'rgba(0, ' + (255 - Math.abs(_device.rssi)*2.5) + ', 0 , 0.2)';
-        chartElement.chart.data.datasets[0].borderColor =
-        'rgba(0, ' + (255 - Math.abs(_device.rssi)*2.5) + ', 0 , 0.2)';
-        chartElement.chart.update();
-      }
-    });
-
-    if(newDevice) {*/
 
       const newChartElement: DevicePackage = {canvasElement: null, chart: null, device: _device, rssi: [_device.rssi]};
 
       Chart.register(...registerables);
 
-      //const htmlElementContainer = document.createElement('div');
+      const htmlElementContainer = document.createElement('div');
       const htmlElement = document.createElement('canvas');
       //htmlElement.id = _device.address;
-      //htmlElementContainer.appendChild(htmlElement);
+      htmlElementContainer.appendChild(htmlElement);
 
       //document.getElementById('BLEStatus').appendChild(htmlElementContainer);
 
@@ -99,11 +80,8 @@ export class Tab1Page implements OnInit {
         },
       });
       newChartElement.chart = myChart;
-      //this.chartElements.push(newChartElement);
-      newChartElement.canvasElement = htmlElement;
+      newChartElement.canvasElement = htmlElementContainer;
       return newChartElement;
-    //}
-
   }
 
 
@@ -146,8 +124,6 @@ export class Tab1Page implements OnInit {
     else {
       msg = _error;
     }
-
-    document.getElementById('console2').innerHTML = msg;
 
     this.log(_error, 'error');
 
@@ -196,12 +172,11 @@ export class Tab1Page implements OnInit {
 
     //log('Starting scan for devices...', 'status');
 
+    //this.deviceList = [];
 
-    this.deviceList = [];
-
-    document.getElementById('devices').innerHTML = '';
-    document.getElementById('services').innerHTML = '';
-    document.getElementById('output').innerHTML = '';
+    //document.getElementById('BLEStatus').innerHTML = '';
+    //document.getElementById('services').innerHTML = '';
+    //document.getElementById('output').innerHTML = '';
 
     if (this.device.platform === 'windows') {
 
@@ -263,8 +238,8 @@ export class Tab1Page implements OnInit {
       } else {
         this.bluetoothle.stopScan();
         this.log('Stopping Scan...', 'status');
-        const devicesContainer: HTMLElement = document.getElementById('devices');
-        devicesContainer.innerHTML = '';
+        /*const devicesContainer: HTMLElement = document.getElementById('devices');
+        devicesContainer.innerHTML = '';*/
       }
     });
 
@@ -302,13 +277,11 @@ export class Tab1Page implements OnInit {
         //Create new Chart
         const newDevice: DevicePackage = this.makeChart(_result);
         this.deviceList.push(newDevice);
-        //this.updateDeviceList();
 
-        document.getElementById('BLEStatus').appendChild(newDevice.canvasElement);
+        this.changeDetection.detectChanges();
 
-        this.devices.push(_result);
+        //document.getElementById('BLEStatus').appendChild(newDevice.canvasElement);
 
-        //addDevice(result.name, result.address);
       } else {
         //Update RSSI For Devices
         for (const device of this.deviceList) {
@@ -317,7 +290,7 @@ export class Tab1Page implements OnInit {
             device.device.rssi = _result.rssi;
 
             //Es sollen nur die letzten 5 RSSI-Werte angezeigt werden.
-            if(device.device.rssi.length > 5) {
+            if(device.rssi.length > 5) {
               device.rssi.shift();
             }
             device.rssi.push(_result.rssi);
@@ -330,7 +303,8 @@ export class Tab1Page implements OnInit {
             device.chart.update();
           }
         }
-        //this.updateDeviceList();
+        //To update the Angular Components
+        this.changeDetection.detectChanges();
       }
     }
   };
@@ -516,7 +490,7 @@ interface Chartelement {
 }
 
 interface DevicePackage {
-  canvasElement: HTMLCanvasElement;
+  canvasElement: HTMLElement;
   chart: Chart;
   device: any;
   rssi: number[];
