@@ -18,7 +18,7 @@ export class Tab1Page implements OnInit {
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
-  public chartElements: Chartelement[] = [];
+  intervalID;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
               private changeDetection: ChangeDetectorRef) {
@@ -44,7 +44,7 @@ export class Tab1Page implements OnInit {
 
   makeChart(_device): DevicePackage {
 
-      const newChartElement: DevicePackage = {canvasElement: null, chart: null, device: _device, rssi: [_device.rssi]};
+      const newChartElement: DevicePackage = {canvasElement: null, chart: null, device: _device, rssi: [_device.rssi], lifetime: 0};
 
       Chart.register(...registerables);
 
@@ -107,7 +107,6 @@ export class Tab1Page implements OnInit {
     let msg;
 
     if (_error.error && _error.message) {
-
       const errorItems = [];
 
       if (_error.service) {
@@ -138,7 +137,6 @@ export class Tab1Page implements OnInit {
     _level = _level || 'log';
 
     if (typeof _msg === 'object') {
-
         _msg = JSON.stringify(_msg, null, '  ');
     }
 
@@ -150,11 +148,9 @@ export class Tab1Page implements OnInit {
         msgDiv.textContent = _msg;
 
         if (_level === 'error') {
-
           msgDiv.style.color = 'red';
 
         } else if (_level === 'success') {
-
           msgDiv.style.color = 'green';
 
         } else {
@@ -181,10 +177,20 @@ export class Tab1Page implements OnInit {
     } else {
 
       //There should be a good balance between scanning and pausing, so the Battery doesnt drain.
-      //const intervalID = setInterval(this.updateDeviceList, 1000);
 
       this.switchScanState();
     }
+  };
+
+  kickOldDevices = () => {
+    this.deviceList.forEach(device => {
+      if(device.lifetime > 2) {
+        const index = this.deviceList.indexOf(device);
+        this.deviceList.splice(index, 1);
+      } else {
+        device.lifetime++;
+      }
+    });
   };
 
   switchScanState = () => {
@@ -231,31 +237,16 @@ export class Tab1Page implements OnInit {
           .subscribe(result => this.startScanSuccess(result));
 
         }
+        this.intervalID = setInterval(this.kickOldDevices, 1000);
       } else {
         this.bluetoothle.stopScan();
+        clearInterval(this.intervalID);
+        this.deviceList = [];
         this.log('Stopping Scan...', 'status');
       }
     });
 
   };
-
-  /*const requestPermissionSuccess = (_result) => {
-    if(_result.requestPermission === true) {
-      log('Permission allowed!', 'status');
-    } else {
-      log('Permission denied, but needed!', 'status');
-      Tab1Page.bluetoothle.requestPermission(requestPermissionSuccess, handleError);
-    }
-  };
-
-  const requestLocationSuccess = (_result) => {
-    if(_result.requestLocation === true) {
-      log('Location allowed!', 'status');
-    } else {
-      log('Location denied, but needed!', 'status');
-      Tab1Page.bluetoothle.requestLocation(requestLocationSuccess, handleError);
-    }
-  };*/
 
   startScanSuccess = (_result) => {
 
@@ -282,6 +273,7 @@ export class Tab1Page implements OnInit {
           if(device.device.address === _result.address) {
 
             device.device.rssi = _result.rssi;
+            device.lifetime = 0;
 
             //Es sollen nur die letzten 5 RSSI-Werte angezeigt werden.
             if(device.rssi.length > 5) {
@@ -303,42 +295,6 @@ export class Tab1Page implements OnInit {
     }
   };
 
-  /*updateDeviceList = () => {
-    const devicesContainer: HTMLElement = document.getElementById('devices');
-    devicesContainer.innerHTML = '';
-
-    this.devices.forEach(device => {
-      this.createDeviceElement(device);
-      this.makeChart(device);
-    });
-  };
-
-  createDeviceElement = (_device) => {
-
-    const devicesContainer: HTMLElement = document.getElementById('devices');
-
-    //Create a Container for every new Device
-    const singleDeviceContainer = document.createElement('div');
-    singleDeviceContainer.style.borderBottom = 'rgb(192,192,192) solid 1px';
-
-    const deviceAddress = document.createElement('p');
-    deviceAddress.innerHTML = 'Device: <b>' + JSON.stringify(_device.address) + '</b>';
-    singleDeviceContainer.appendChild(deviceAddress);
-
-    const deviceRssi = document.createElement('p');
-    deviceRssi.innerHTML = 'RSSI: ' + JSON.stringify(_device.rssi);
-    singleDeviceContainer.appendChild(deviceRssi);
-
-    if(_device.name) {
-
-      const deviceName = document.createElement('p');
-      deviceName.innerHTML = JSON.stringify(_device.name);
-      singleDeviceContainer.appendChild(deviceName);
-
-    }
-
-    devicesContainer.appendChild(singleDeviceContainer);
-  };*/
 
   startAdvertising = () => {
 
@@ -457,30 +413,6 @@ export class Tab1Page implements OnInit {
     document.getElementById(_serviceUuid + '.' + _characteristicUuid).textContent = _value;
   };
 
-
-
-  /* Der Code für BLE
-  Scan() {
-    this.devices = [];
-    this.ble.scan([], 15).subscribe(
-      device => this.onDeviceDiscovered(device)
-    );
-  }
-
-  onDeviceDiscovered(_device) {
-    console.log('Discovered' + JSON.stringify(_device,null,2));
-    this.ngZone.run(()=>{
-      this.devices.push(_device);
-      console.log(_device);
-    })
-  }
-  */
-}
-
-interface Chartelement {
-  chart: Chart;
-  device: any;
-  rssi: number[];
 }
 
 interface DevicePackage {
@@ -488,4 +420,5 @@ interface DevicePackage {
   chart: Chart;
   device: any;
   rssi: number[];
+  lifetime: number;
 }
