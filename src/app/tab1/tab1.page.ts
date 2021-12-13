@@ -17,7 +17,7 @@ export class Tab1Page implements OnInit {
   //For the right HTML Mode
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
-  public deviceList: DevicePackage[] = [{canvasElement: null, chart: null, device: 'jkfd', rssi: [1,2 ,3 ]}];
+  public deviceList: DevicePackage[] = [];
   public chartElements: Chartelement[] = [];
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
@@ -172,11 +172,7 @@ export class Tab1Page implements OnInit {
 
     //log('Starting scan for devices...', 'status');
 
-    //this.deviceList = [];
-
-    //document.getElementById('BLEStatus').innerHTML = '';
-    //document.getElementById('services').innerHTML = '';
-    //document.getElementById('output').innerHTML = '';
+    this.deviceList = [];
 
     if (this.device.platform === 'windows') {
 
@@ -238,8 +234,6 @@ export class Tab1Page implements OnInit {
       } else {
         this.bluetoothle.stopScan();
         this.log('Stopping Scan...', 'status');
-        /*const devicesContainer: HTMLElement = document.getElementById('devices');
-        devicesContainer.innerHTML = '';*/
       }
     });
 
@@ -280,7 +274,7 @@ export class Tab1Page implements OnInit {
 
         this.changeDetection.detectChanges();
 
-        //document.getElementById('BLEStatus').appendChild(newDevice.canvasElement);
+        document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
 
       } else {
         //Update RSSI For Devices
