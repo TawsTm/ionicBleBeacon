@@ -30,9 +30,15 @@ export class Tab1Page implements OnInit {
       this.device = this._device;
       this.bluetoothle = this._bluetoothle;
       this.bluetoothle.initialize(resolve, { request: true, statusReceiver: false }).subscribe(ble => {
-        //log(ble.status, 'status'); // logs 'enabled'
         this.initializeSuccess(ble);
       });
+
+      //For Peripheral use
+      this.bluetoothle.initializePeripheral({ request: true }).subscribe(ble => {
+        //log(ble.status, 'status'); // logs 'enabled'
+        this.initializePeripheralSuccess(ble);
+      });
+
     })).then(this.handleError);
 
   }
@@ -91,6 +97,24 @@ export class Tab1Page implements OnInit {
     if (_result.status === 'enabled') {
 
       this.log('Bluetooth is enabled.', 'success');
+
+    } else {
+
+      this.log('Bluetooth is not enabled:', 'error');
+
+    }
+  };
+
+  initializePeripheralSuccess = (_result) => {
+
+    this.log('Peripheral status: ' + _result, 'success');
+
+    if (_result.status === 'enabled') {
+
+      this.log('Peripheral ready, adding Services..', 'success');
+      //Hier sollte die vom Server bergebene ID eingefügt werden.
+      this.bluetoothle.addService({service: '529e3d04-5ce7-11ec-bf63-0242ac130002',
+        characteristics: [{uuid: 'e7e8613a-5ce9-11ec-bf63-0242ac130002'}]}).then((result) => this.log(result.service, 'status'));
 
     } else {
 
@@ -259,6 +283,14 @@ export class Tab1Page implements OnInit {
         device.device.address === _result.address
       )) {
 
+        this.bluetoothle.subscribe({address: _result.address,
+          service: '529e3d04-5ce7-11ec-bf63-0242ac130002',
+          characteristic: 'e7e8613a-5ce9-11ec-bf63-0242ac130002'})
+          .subscribe({
+            next: (result) => this.subscribeSuccess(result),
+            error: (error) => this.handleError(error)
+          });
+
         //Create new Chart
         const newDevice: DevicePackage = this.makeChart(_result);
         this.deviceList.push(newDevice);
@@ -295,12 +327,21 @@ export class Tab1Page implements OnInit {
     }
   };
 
+  subscribeSuccess(_result) {
+    if(_result.status === 'subscribed') {
+      this.log('Subscribed to Service', 'success');
+    } else {
+      this.log('Not Subscribed to Service', 'error');
+    }
+  }
+
 
   startAdvertising = () => {
 
     this.log('Starting to advertise for other devices...', 'status');
 
-    //Tab1Page.bluetoothle.startAdvertising(startAdvertisingSuccess, handleError, { services: [] });
+    this.bluetoothle.startAdvertising({ services: ['1234'], service: '1234', name: 'Ich bin einer der' })
+          .then(result => this.startAdvertisingSuccess(result));
   };
 
   startAdvertisingSuccess = (_result) => {
