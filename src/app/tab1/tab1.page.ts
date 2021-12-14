@@ -281,15 +281,15 @@ export class Tab1Page implements OnInit {
 
       if (!this.deviceList.some((device) =>
         device.device.address === _result.address
-      )) {
+      ) && _result.advertisement.serviceUuids[0] === '1234') {
 
-        this.bluetoothle.subscribe({address: _result.address,
+        /*this.bluetoothle.subscribe({address: _result.address,
           service: '529e3d04-5ce7-11ec-bf63-0242ac130002',
           characteristic: 'e7e8613a-5ce9-11ec-bf63-0242ac130002'})
           .subscribe({
             next: (result) => this.subscribeSuccess(result),
             error: (error) => this.handleError(error)
-          });
+          });*/
 
         //Create new Chart
         const newDevice: DevicePackage = this.makeChart(_result);
@@ -299,7 +299,7 @@ export class Tab1Page implements OnInit {
 
         document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
 
-      } else {
+      } else if (_result.advertisement.serviceUuids[0] === '1234') {
         //Update RSSI For Devices
         for (const device of this.deviceList) {
           if(device.device.address === _result.address) {
@@ -328,6 +328,8 @@ export class Tab1Page implements OnInit {
   };
 
   subscribeSuccess(_result) {
+
+    this.log('Ich war hier!', 'status');
     if(_result.status === 'subscribed') {
       this.log('Subscribed to Service', 'success');
     } else {
