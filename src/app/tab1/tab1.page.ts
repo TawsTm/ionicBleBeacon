@@ -326,10 +326,10 @@ export class Tab1Page implements OnInit {
             const data = new Float32Array(dataBytes.slice(2));
             const firstDataPack = data[0];*/
 
-            serviceUuid = uuid.toLowerCase();
+            serviceUuid = uuid;
           }
 
-          if(serviceUuid === this.installationPlayerID.toLowerCase) {
+          if(serviceUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
             //Create new Chart
             const newDevice: DevicePackage = this.makeChart(_result);
             this.deviceList.push(newDevice);
