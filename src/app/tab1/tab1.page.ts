@@ -460,17 +460,21 @@ asHexString(i) {
     this.log('Starting to advertise for other devices...', 'status');
 
     this.bluetoothle.startAdvertising({
-      services: [this.installationPlayerID], service: this.installationPlayerID, name: 'Ich bin einer der' })
-        .then(result => this.startAdvertisingSuccess(result));
+      services: [this.installationPlayerID], service: this.installationPlayerID,
+      name: 'Teil der Installation', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
+        .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
   };
 
   startAdvertisingSuccess = (_result) => {
-    this.log('startAdvertisingSuccess(' + _result.status + ')', 'status');
     if (_result.status === 'advertisingStarted') {
       this.log('Advertising for devices (will continue to scan until you stop)...', 'status');
     } else {
       this.log('Something with the Advertising went wrong!', 'error');
     }
+  };
+
+  switchAdvertiseState = () => {
+
   };
 
   /*retrieveConnectedSuccess = (_result) => {
