@@ -18,7 +18,8 @@ export class Tab1Page implements OnInit {
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
-  installationPlayerID = '1234';
+  // 4 Letters in Hexadezimal from 0-F.
+  installationPlayerID = 'fa2b';
   intervalID;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
@@ -114,8 +115,8 @@ export class Tab1Page implements OnInit {
 
       this.log('Peripheral ready, adding Services..', 'success');
       //Hier sollte die vom Server bergebene ID eingefügt werden.
-      this.bluetoothle.addService({service: this.installationPlayerID,
-        characteristics: [{uuid: this.installationPlayerID}]}).then((result) => this.log(result.service, 'status'));
+      //this.bluetoothle.addService({service: this.installationPlayerID,
+      //  characteristics: [{uuid: this.installationPlayerID}]}).then((result) => this.log(result.service, 'status'));
 
     } else {
 
@@ -325,10 +326,10 @@ export class Tab1Page implements OnInit {
             const data = new Float32Array(dataBytes.slice(2));
             const firstDataPack = data[0];*/
 
-            serviceUuid = uuid;
+            serviceUuid = uuid.toLowerCase();
           }
 
-          if(serviceUuid === this.installationPlayerID) {
+          if(serviceUuid === this.installationPlayerID.toLowerCase) {
             //Create new Chart
             const newDevice: DevicePackage = this.makeChart(_result);
             this.deviceList.push(newDevice);
