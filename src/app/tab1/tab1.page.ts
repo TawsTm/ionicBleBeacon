@@ -328,17 +328,17 @@ export class Tab1Page implements OnInit {
 
             serviceUuid = uuid;
           }
+        }
 
-          if(serviceUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
-            //Create new Chart
-            const newDevice: DevicePackage = this.makeChart(_result);
-            this.deviceList.push(newDevice);
+        if(serviceUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
+          //Create new Chart
+          const newDevice: DevicePackage = this.makeChart(_result);
+          this.deviceList.push(newDevice);
 
-            this.changeDetection.detectChanges();
+          this.changeDetection.detectChanges();
 
-            document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
-          //}
-          }
+          document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
+
 
           /*const newstring = [];
           for (const byte of advertisementBytes) {
