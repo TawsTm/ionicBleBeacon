@@ -292,6 +292,7 @@ export class Tab1Page implements OnInit {
         if(this.device.platform === 'iOS') {
           //iOS return an Object
           const uuid = _result.advertisement.serviceUuids[0];
+          this.log(uuid, 'status');
           if(uuid.startsWith(this.installationPlayerID)) {
             subscriber = true;
             playerID = uuid.substring(uuid.length - 4);
@@ -307,9 +308,18 @@ export class Tab1Page implements OnInit {
           if (serviceData) {
             // first 2 bytes are the 16 bit UUID/ServiceID
             const uuidBytes = new Uint16Array(serviceData.slice(0,16));
-            const firstUuid = uuidBytes[0].toString(16); // hex string
+            let installationUuid = '';
+            for(let i = 7; i > 0; i--) {
+              if(i < 6 && i > 1) {
+                installationUuid += '-';
+              }
+              installationUuid += uuidBytes[i].toString(16);
+            }
 
-            this.log(firstUuid, 'status');
+            if(installationUuid === this.installationPlayerID) {
+              subscriber = true;
+              playerID = uuidBytes[0].toString(16);
+            }
 
             /* Sending a second UUID only works for iOS for now
             const uuidBytes2 = new Uint16Array(serviceData.slice(2,4));
@@ -323,8 +333,6 @@ export class Tab1Page implements OnInit {
             /*const dataBytes = new Uint16Array(serviceData.slice(2));
             const data = new Float32Array(dataBytes.slice(2));
             const firstDataPack = data[0];*/
-
-            subscriber = true;
           }
 
           /*const SERVICE_DATA_KEY2 = '0x09';
