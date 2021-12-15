@@ -1,9 +1,9 @@
 /* eslint-disable no-underscore-dangle */
-import { AfterViewInit, Component, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { Device } from '@awesome-cordova-plugins/device/ngx';
 import { Platform } from '@ionic/angular';
 import { BluetoothLE } from '@awesome-cordova-plugins/bluetooth-le/ngx';
-import {Chart, ChartItem, registerables} from 'node_modules/chart.js';
+import { Chart, ChartItem, registerables } from 'node_modules/chart.js';
 
 @Component({
   selector: 'app-tab1',
@@ -18,6 +18,7 @@ export class Tab1Page implements OnInit {
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
+  installationPlayerID = '1234';
   intervalID;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
@@ -113,8 +114,8 @@ export class Tab1Page implements OnInit {
 
       this.log('Peripheral ready, adding Services..', 'success');
       //Hier sollte die vom Server bergebene ID eingefügt werden.
-      this.bluetoothle.addService({service: '529e3d04-5ce7-11ec-bf63-0242ac130002',
-        characteristics: [{uuid: 'e7e8613a-5ce9-11ec-bf63-0242ac130002'}]}).then((result) => this.log(result.service, 'status'));
+      this.bluetoothle.addService({service: this.installationPlayerID,
+        characteristics: [{uuid: this.installationPlayerID}]}).then((result) => this.log(result.service, 'status'));
 
     } else {
 
@@ -196,7 +197,7 @@ export class Tab1Page implements OnInit {
 
     if (this.device.platform === 'windows') {
 
-      this.bluetoothle.retrieveConnected(this.retrieveConnectedSuccess, this.handleError, {});
+      //this.bluetoothle.retrieveConnected(this.retrieveConnectedSuccess, this.handleError, {});
 
     } else {
 
@@ -269,8 +270,25 @@ export class Tab1Page implements OnInit {
         this.log('Stopping Scan...', 'status');
       }
     });
-
   };
+
+  decodeUnicode = (str) => {
+    // Going backwards: from byte stream, to percent-encoding, to original string.
+
+    // eslint-disable-next-line arrow-body-style
+    decodeURIComponent(atob(str).split('').map((c) => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+  };
+
+  bin2String(array) {
+    let result = '';
+    for (const x of array) {
+       result += String.fromCharCode(parseInt(x, 2));
+    }
+    return result;
+  }
+
 
   startScanSuccess = (_result) => {
 
@@ -281,25 +299,81 @@ export class Tab1Page implements OnInit {
 
       if (!this.deviceList.some((device) =>
         device.device.address === _result.address
-      ) && _result.advertisement.serviceUuids[0] === '1234') {
+      )) {
+        let serviceUuid;
 
-        /*this.bluetoothle.subscribe({address: _result.address,
-          service: '529e3d04-5ce7-11ec-bf63-0242ac130002',
-          characteristic: 'e7e8613a-5ce9-11ec-bf63-0242ac130002'})
-          .subscribe({
-            next: (result) => this.subscribeSuccess(result),
-            error: (error) => this.handleError(error)
-          });*/
+        if(this.device.platform === 'iOS') {
+          //iOS return an Object
+          serviceUuid = _result.advertisement.serviceUuids[0];
 
-        //Create new Chart
-        const newDevice: DevicePackage = this.makeChart(_result);
-        this.deviceList.push(newDevice);
+        } else if (this.device.platform === 'Android') {
+          //Android returns a Base64 Code that needs conversion
+          const advertisementBytes = this.bluetoothle.encodedStringToBytes(_result.advertisement);
 
-        this.changeDetection.detectChanges();
+          const advertisingData = this.parseAdvertisingData(advertisementBytes);
+          const SERVICE_DATA_KEY = '0x03';
+          const serviceData = advertisingData[SERVICE_DATA_KEY];
+          if (serviceData) {
+            // first 2 bytes are the 16 bit UUID/ServiceID
+            const uuidBytes = new Uint16Array(serviceData.slice(0,2));
+            const uuid = uuidBytes[0].toString(16); // hex string
+            /**
+             * If the Service is filled, or there is more then one Service, u can read them like shown below
+             */
+            // remaining bytes are the service data, expecting 32bit floating point number
+            /*const dataBytes = new Uint16Array(serviceData.slice(2));
+            const data = new Float32Array(dataBytes.slice(2));
+            const firstDataPack = data[0];*/
 
-        document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
+            serviceUuid = uuid;
+          }
 
-      } else if (_result.advertisement.serviceUuids[0] === '1234') {
+          if(serviceUuid === this.installationPlayerID) {
+            //Create new Chart
+            const newDevice: DevicePackage = this.makeChart(_result);
+            this.deviceList.push(newDevice);
+
+            this.changeDetection.detectChanges();
+
+            document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
+          //}
+          }
+
+          /*const newstring = [];
+          for (const byte of advertisementBytes) {
+            newstring.push('0x' + ('0'+(byte.toString(16))).substr(-2).toUpperCase());
+          }
+          const parsedString = newstring.join(' ');*/
+
+          //const output = Buffer.from(parsedString, 'hex');
+
+
+
+          /*const advertisementBytesObject = new TextDecoder().decode(advertisementBytes);
+          const advertisementBytesObject2 = atob(advertisementBytesObject);*/
+          //const atoba = atob(_result.advertisement);
+
+          //const encodedString = this.bin2String(advertisementBytesObject);
+
+          //const advertisementString = this.bluetoothle.bytesToString(advertisementBytes);
+
+          //const advertisementBytes = atob(_result.advertisement);
+          //const advertisementBytes = Buffer.from(_result.advertisement, 'base64').toString('binary');
+
+
+        }
+
+        //if(serviceUuid === '1234') {
+
+          /*this.bluetoothle.subscribe({address: _result.address,
+            service: '529e3d04-5ce7-11ec-bf63-0242ac130002',
+            characteristic: 'e7e8613a-5ce9-11ec-bf63-0242ac130002'})
+            .subscribe({
+              next: (result) => this.subscribeSuccess(result),
+              error: (error) => this.handleError(error)
+            });*/
+
+      } else {
         //Update RSSI For Devices
         for (const device of this.deviceList) {
           if(device.device.address === _result.address) {
@@ -327,7 +401,49 @@ export class Tab1Page implements OnInit {
     }
   };
 
-  subscribeSuccess(_result) {
+  parseAdvertisingData(buffer) {
+    let length;
+    let type;
+    let data;
+    let i = 0;
+    const advertisementData = {};
+    const bytes = new Uint8Array(buffer);
+
+    while (length !== 0) {
+
+        // eslint-disable-next-line no-bitwise
+        length = bytes[i] & 0xFF;
+        i++;
+
+        // decode type constants from https://www.bluetooth.org/en-us/specification/assigned-numbers/generic-access-profile
+        // eslint-disable-next-line no-bitwise
+        type = bytes[i] & 0xFF;
+        i++;
+
+        data = bytes.slice(i, i + length - 1).buffer; // length includes type byte, but not length byte
+        i += length - 2;  // move to end of data
+        i++;
+
+        advertisementData[this.asHexString(type)] = data;
+    }
+
+    return advertisementData;
+}
+
+asHexString(i) {
+  let hex;
+
+  hex = i.toString(16);
+
+  // zero padding
+  if (hex.length === 1) {
+      hex = '0' + hex;
+  }
+
+  return '0x' + hex;
+}
+
+  /*subscribeSuccess(_result) {
 
     this.log('Ich war hier!', 'status');
     if(_result.status === 'subscribed') {
@@ -335,15 +451,16 @@ export class Tab1Page implements OnInit {
     } else {
       this.log('Not Subscribed to Service', 'error');
     }
-  }
+  }*/
 
 
   startAdvertising = () => {
 
     this.log('Starting to advertise for other devices...', 'status');
 
-    this.bluetoothle.startAdvertising({ services: ['1234'], service: '1234', name: 'Ich bin einer der' })
-          .then(result => this.startAdvertisingSuccess(result));
+    this.bluetoothle.startAdvertising({
+      services: [this.installationPlayerID], service: this.installationPlayerID, name: 'Ich bin einer der' })
+        .then(result => this.startAdvertisingSuccess(result));
   };
 
   startAdvertisingSuccess = (_result) => {
@@ -355,7 +472,7 @@ export class Tab1Page implements OnInit {
     }
   };
 
-  retrieveConnectedSuccess = (_result) => {
+  /*retrieveConnectedSuccess = (_result) => {
 
     this.log('retrieveConnectedSuccess()');
     this.log(_result);
@@ -450,7 +567,7 @@ export class Tab1Page implements OnInit {
   };
 
 
-
+*/
   reportValue = (_serviceUuid, _characteristicUuid, _value) => {
 
     document.getElementById(_serviceUuid + '.' + _characteristicUuid).textContent = _value;
