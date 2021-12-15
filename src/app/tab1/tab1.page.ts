@@ -18,9 +18,10 @@ export class Tab1Page implements OnInit {
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
-  // 4 Letters in Hexadezimal from 0-F.
-  installationPlayerID = 'fa2b';
-  playerID = 'a123';
+  //128Bit Letters in Hexadezimal from 0-F. (minus 4 Letters)
+  installationPlayerID = '73f97f9e-5c59-44da-bd1a-c1658279';
+  //The end of the UUID represents the PlayerID
+  playerID = '8c88';
   intervalID;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
@@ -285,23 +286,30 @@ export class Tab1Page implements OnInit {
       if (!this.deviceList.some((device) =>
         device.device.address === _result.address
       )) {
-        let installationUuid;
+        let subscriber;
+        let playerID;
 
         if(this.device.platform === 'iOS') {
           //iOS return an Object
-          installationUuid = _result.advertisement.serviceUuids[0];
+          const uuid = _result.advertisement.serviceUuids[0];
+          if(uuid.startsWith(this.installationPlayerID)) {
+            subscriber = true;
+            playerID = uuid.substring(uuid.length - 4);
+          }
 
         } else if (this.device.platform === 'Android') {
           //Android returns a Base64 Code that needs conversion
           const advertisementBytes = this.bluetoothle.encodedStringToBytes(_result.advertisement);
 
           const advertisingData = this.parseAdvertisingData(advertisementBytes);
-          const SERVICE_DATA_KEY = '0x03';
+          const SERVICE_DATA_KEY = '0x07';
           const serviceData = advertisingData[SERVICE_DATA_KEY];
           if (serviceData) {
             // first 2 bytes are the 16 bit UUID/ServiceID
-            const uuidBytes = new Uint16Array(serviceData.slice(0,2));
+            const uuidBytes = new Uint16Array(serviceData.slice(0,16));
             const firstUuid = uuidBytes[0].toString(16); // hex string
+
+            this.log(firstUuid, 'status');
 
             /* Sending a second UUID only works for iOS for now
             const uuidBytes2 = new Uint16Array(serviceData.slice(2,4));
@@ -316,11 +324,20 @@ export class Tab1Page implements OnInit {
             const data = new Float32Array(dataBytes.slice(2));
             const firstDataPack = data[0];*/
 
-            installationUuid = firstUuid;
+            subscriber = true;
           }
+
+          /*const SERVICE_DATA_KEY2 = '0x09';
+          const serviceData2 = advertisingData[SERVICE_DATA_KEY2];
+          if (serviceData2) {
+            const uuidBytes = new Uint16Array(serviceData2.slice(0,2));
+            const localName = uuidBytes[0].toString(16); // hex string
+            this.log(localName, 'status');
+            playerID = localName;
+          }*/
         }
 
-        if(installationUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
+        if(subscriber) {
           //Create new Chart
           const newDevice: DevicePackage = this.makeChart(_result);
           this.deviceList.push(newDevice);
@@ -328,7 +345,7 @@ export class Tab1Page implements OnInit {
           this.changeDetection.detectChanges();
 
           document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
-          this.log(_result.name, 'status');
+          //this.log(_result., 'status');
 
 
           /*const newstring = [];
@@ -451,8 +468,8 @@ asHexString(i) {
     this.log('Starting to advertise for other devices...', 'status');
 
     this.bluetoothle.startAdvertising({
-      services: [this.installationPlayerID], service: this.installationPlayerID,
-      name: this.playerID, includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
+      services: [this.installationPlayerID + this.playerID], service: this.installationPlayerID + this.playerID,
+      name: 'BleBeacon', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
         .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
   };
 
