@@ -46,8 +46,8 @@ export class Tab1Page implements OnInit {
   }
 
   ngOnInit() {
-    document.getElementById('scan-button').addEventListener('click', this.startScan);
-    document.getElementById('advertise-button').addEventListener('click', this.startAdvertising);
+    document.getElementById('scan-button').addEventListener('click', this.switchScanState);
+    document.getElementById('advertise-button').addEventListener('click', this.switchAdvertiseState);
   }
 
   makeChart(_device): DevicePackage {
@@ -190,23 +190,6 @@ export class Tab1Page implements OnInit {
     }
   };
 
-  startScan = () => {
-
-    //log('Starting scan for devices...', 'status');
-
-    this.deviceList = [];
-
-    if (this.device.platform === 'windows') {
-
-      //this.bluetoothle.retrieveConnected(this.retrieveConnectedSuccess, this.handleError, {});
-
-    } else {
-
-      //There should be a good balance between scanning and pausing, so the Battery doesnt drain.
-
-      this.switchScanState();
-    }
-  };
 
   kickOldDevices = () => {
     this.deviceList.forEach(device => {
@@ -465,6 +448,14 @@ asHexString(i) {
         .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
   };
 
+  stopAdvertising = () => {
+
+    this.log('Starting to advertise for other devices...', 'status');
+
+    this.bluetoothle.stopAdvertising()
+        .then(result => this.stopAdvertisingSuccess(result), error => this.handleError(error));
+  };
+
   startAdvertisingSuccess = (_result) => {
     if (_result.status === 'advertisingStarted') {
       this.log('Advertising for devices (will continue to scan until you stop)...', 'status');
@@ -473,8 +464,24 @@ asHexString(i) {
     }
   };
 
-  switchAdvertiseState = () => {
+  stopAdvertisingSuccess = (_result) => {
+    if (_result.status === 'advertisingStopped') {
+      this.log('Advertising is stopped', 'status');
+    } else {
+      this.log('Something with the Advertising-Stop went wrong!', 'error');
+    }
+  };
 
+  switchAdvertiseState = () => {
+    this.bluetoothle.isAdvertising().then(
+      (result) => {
+        this.log(result.isAdvertising, 'status');
+      if(result.isAdvertising) {
+        this.stopAdvertising();
+      } else {
+        this.startAdvertising();
+      }
+    }, (error) => this.handleError(error));
   };
 
   /*retrieveConnectedSuccess = (_result) => {
