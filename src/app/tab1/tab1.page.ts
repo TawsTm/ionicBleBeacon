@@ -20,6 +20,7 @@ export class Tab1Page implements OnInit {
   public deviceList: DevicePackage[] = [];
   // 4 Letters in Hexadezimal from 0-F.
   installationPlayerID = 'fa2b';
+  playerID = 'a123';
   intervalID;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
@@ -284,11 +285,13 @@ export class Tab1Page implements OnInit {
       if (!this.deviceList.some((device) =>
         device.device.address === _result.address
       )) {
-        let serviceUuid;
+        let installationUuid;
+        let playerUuid;
 
         if(this.device.platform === 'iOS') {
           //iOS return an Object
-          serviceUuid = _result.advertisement.serviceUuids[0];
+          installationUuid = _result.advertisement.serviceUuids[0];
+          playerUuid = _result.advertisement.serviceUuids[1];
 
         } else if (this.device.platform === 'Android') {
           //Android returns a Base64 Code that needs conversion
@@ -300,7 +303,8 @@ export class Tab1Page implements OnInit {
           if (serviceData) {
             // first 2 bytes are the 16 bit UUID/ServiceID
             const uuidBytes = new Uint16Array(serviceData.slice(0,2));
-            const uuid = uuidBytes[0].toString(16); // hex string
+            const firstUuid = uuidBytes[0].toString(16); // hex string
+            const secondUuid = uuidBytes[1].toString(16);
             /**
              * If the Service is filled, or there is more then one Service, u can read them like shown below
              */
@@ -309,11 +313,12 @@ export class Tab1Page implements OnInit {
             const data = new Float32Array(dataBytes.slice(2));
             const firstDataPack = data[0];*/
 
-            serviceUuid = uuid;
+            installationUuid = firstUuid;
+            playerUuid = secondUuid;
           }
         }
 
-        if(serviceUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
+        if(installationUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
           //Create new Chart
           const newDevice: DevicePackage = this.makeChart(_result);
           this.deviceList.push(newDevice);
@@ -321,6 +326,7 @@ export class Tab1Page implements OnInit {
           this.changeDetection.detectChanges();
 
           document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
+          this.log('Dieser Player hat die ID: ' + playerUuid, 'status');
 
 
           /*const newstring = [];
@@ -443,7 +449,7 @@ asHexString(i) {
     this.log('Starting to advertise for other devices...', 'status');
 
     this.bluetoothle.startAdvertising({
-      services: [this.installationPlayerID], service: this.installationPlayerID,
+      services: [this.installationPlayerID, this.playerID], service: this.installationPlayerID,
       name: 'Teil der Installation', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
         .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
   };
@@ -484,102 +490,7 @@ asHexString(i) {
     }, (error) => this.handleError(error));
   };
 
-  /*retrieveConnectedSuccess = (_result) => {
 
-    this.log('retrieveConnectedSuccess()');
-    this.log(_result);
-
-    _result.forEach((device) => {
-      this.addDevice(device.name, device.address);
-    });
-  };
-
-  addDevice = (_name, _address) => {
-
-    let doConnect = false;
-
-    const button = document.createElement('button');
-    button.style.width = '100%';
-    button.style.padding = '10px';
-    button.style.fontSize = '16px';
-    button.textContent = _name + ': ' + _address;
-
-    button.addEventListener('click', () => {
-
-        document.getElementById('services').innerHTML = '';
-        doConnect = true;
-    });
-
-    if(doConnect) {
-      this.connect(_address);
-      doConnect = false;
-    }
-
-    document.getElementById('devices').appendChild(button);
-  };
-
-  connect = (_address) => {
-
-    this.log('Connecting to device: ' + _address + '...', 'status');
-
-    if (this.device.platform === 'windows') {
-
-        //Windows-Geräte müssen gepaired sein um angezeigt zu werden, daher wäre der nächste Schritt die Services auszulesen.
-        //this.getDeviceServices(address);
-
-    }
-    else {
-
-      this.stopScan();
-
-        new Promise((resolve, reject) => {
-
-          //Tab1Page.bluetoothle.connect(resolve, reject, { address });
-
-        }).then(this.connectSuccess, this.handleError);
-
-    }
-  };
-
-  stopScan = () => {
-
-    new Promise((resolve, reject) => {
-
-      //Tab1Page.bluetoothle.stopScan(resolve, reject);
-
-    }).then(this.stopScanSuccess, this.handleError);
-  };
-
-  stopScanSuccess = () => {
-
-    if (!this.deviceList.length) {
-
-      this.log('NO DEVICES FOUND');
-    }
-    else {
-
-      this.log('Found ' + this.deviceList.length + ' devices.', 'status');
-    }
-  };
-
-  connectSuccess = (_result) => {
-
-    this.log('- ' + _result.status);
-
-    if (_result.status === 'connected') {
-
-      //Weitere Verbindungsmöglichkeiten sind noch nicht notwendig.
-      this.log('The Divece is connected!: ' + _result.address, 'status');
-        //this.getDeviceServices(result.address);
-    }
-    else if (_result.status === 'disconnected') {
-
-      this.log('Disconnected from device: ' + _result.address, 'status');
-    }
-  };
-
-
-*/
   reportValue = (_serviceUuid, _characteristicUuid, _value) => {
 
     document.getElementById(_serviceUuid + '.' + _characteristicUuid).textContent = _value;
