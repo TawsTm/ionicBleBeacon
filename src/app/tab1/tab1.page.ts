@@ -292,10 +292,9 @@ export class Tab1Page implements OnInit {
         if(this.device.platform === 'iOS') {
           //iOS return an Object
           const uuid = _result.advertisement.serviceUuids[0];
-          this.log(uuid, 'status');
-          if(uuid.startsWith(this.installationPlayerID)) {
+          if(uuid.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
             subscriber = true;
-            playerID = uuid.substring(uuid.length - 4);
+            playerID = uuid.substring(uuid.length - 4).toLowerCase();
           }
 
         } else if (this.device.platform === 'Android') {
@@ -316,7 +315,7 @@ export class Tab1Page implements OnInit {
               installationUuid += uuidBytes[i].toString(16);
             }
 
-            if(installationUuid === this.installationPlayerID) {
+            if(installationUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
               subscriber = true;
               playerID = uuidBytes[0].toString(16);
             }
@@ -353,8 +352,8 @@ export class Tab1Page implements OnInit {
           this.changeDetection.detectChanges();
 
           document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
-          //this.log(_result., 'status');
 
+          this.log('Found Device: ' + playerID, 'status');
 
           /*const newstring = [];
           for (const byte of advertisementBytes) {
