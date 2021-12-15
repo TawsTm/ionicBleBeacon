@@ -286,12 +286,10 @@ export class Tab1Page implements OnInit {
         device.device.address === _result.address
       )) {
         let installationUuid;
-        let playerUuid;
 
         if(this.device.platform === 'iOS') {
           //iOS return an Object
           installationUuid = _result.advertisement.serviceUuids[0];
-          playerUuid = _result.advertisement.serviceUuids[1];
 
         } else if (this.device.platform === 'Android') {
           //Android returns a Base64 Code that needs conversion
@@ -304,7 +302,12 @@ export class Tab1Page implements OnInit {
             // first 2 bytes are the 16 bit UUID/ServiceID
             const uuidBytes = new Uint16Array(serviceData.slice(0,2));
             const firstUuid = uuidBytes[0].toString(16); // hex string
-            const secondUuid = uuidBytes[1].toString(16);
+
+            /* Sending a second UUID only works for iOS for now
+            const uuidBytes2 = new Uint16Array(serviceData.slice(2,4));
+            const secondUuid = uuidBytes2[0].toString(16);
+            */
+
             /**
              * If the Service is filled, or there is more then one Service, u can read them like shown below
              */
@@ -314,7 +317,6 @@ export class Tab1Page implements OnInit {
             const firstDataPack = data[0];*/
 
             installationUuid = firstUuid;
-            playerUuid = secondUuid;
           }
         }
 
@@ -326,7 +328,7 @@ export class Tab1Page implements OnInit {
           this.changeDetection.detectChanges();
 
           document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
-          this.log('Dieser Player hat die ID: ' + playerUuid, 'status');
+          this.log(_result.name, 'status');
 
 
           /*const newstring = [];
@@ -449,14 +451,14 @@ asHexString(i) {
     this.log('Starting to advertise for other devices...', 'status');
 
     this.bluetoothle.startAdvertising({
-      services: [this.installationPlayerID, this.playerID], service: this.installationPlayerID,
-      name: 'Teil der Installation', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
+      services: [this.installationPlayerID], service: this.installationPlayerID,
+      name: this.playerID, includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
         .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
   };
 
   stopAdvertising = () => {
 
-    this.log('Starting to advertise for other devices...', 'status');
+    this.log('Cancelling to advertise for other devices...', 'status');
 
     this.bluetoothle.stopAdvertising()
         .then(result => this.stopAdvertisingSuccess(result), error => this.handleError(error));
@@ -481,7 +483,6 @@ asHexString(i) {
   switchAdvertiseState = () => {
     this.bluetoothle.isAdvertising().then(
       (result) => {
-        this.log(result.isAdvertising, 'status');
       if(result.isAdvertising) {
         this.stopAdvertising();
       } else {
