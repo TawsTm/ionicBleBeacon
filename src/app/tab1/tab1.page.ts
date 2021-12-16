@@ -218,7 +218,8 @@ export class Tab1Page implements OnInit {
               } else {
                 this.log('Permission denied', 'error');
               }
-            });
+            },
+            (error) => this.handleError(error));
           }
         });
 
@@ -231,9 +232,11 @@ export class Tab1Page implements OnInit {
               } else {
                 this.log('Location denied', 'error');
               }
-            });
+            },
+            (error) => this.handleError(error));
           }
-        });
+        },
+        (error) => this.handleError(error));
 
         if(this.device.platform === 'Android') {
 
