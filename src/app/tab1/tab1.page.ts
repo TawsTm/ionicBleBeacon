@@ -448,20 +448,20 @@ export class Tab1Page implements OnInit {
     }
 
     return advertisementData;
-}
-
-asHexString(i) {
-  let hex;
-
-  hex = i.toString(16);
-
-  // zero padding
-  if (hex.length === 1) {
-      hex = '0' + hex;
   }
 
-  return '0x' + hex;
-}
+  asHexString(i) {
+    let hex;
+
+    hex = i.toString(16);
+
+    // zero padding
+    if (hex.length === 1) {
+        hex = '0' + hex;
+    }
+
+    return '0x' + hex;
+  }
 
   /*subscribeSuccess(_result) {
 
