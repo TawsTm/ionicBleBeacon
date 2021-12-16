@@ -1,33 +1,17 @@
 <ion-header [translucent]="false" [mode]="deviceMode">
-
   <div class="header">
-
-      <ion-icon name="Bluetooth" color="primary"></ion-icon>
-
+    <ion-icon name="Bluetooth" color="primary"></ion-icon>
     <ion-toolbar>
-
       <ion-buttons slot="start">
-
-        <ion-button id="advertise-button" fill="clear">
-          Advertise
-        </ion-button>
-
+        <ion-button id="advertise-button" fill="clear"> Advertise </ion-button>
       </ion-buttons>
 
       <ion-buttons slot="end">
-
-        <ion-button id="scan-button"  fill="clear">
-          Scan Devices
-        </ion-button>
-
+        <ion-button id="scan-button" fill="clear"> Scan Devices </ion-button>
       </ion-buttons>
-
     </ion-toolbar>
-
   </div>
-
 </ion-header>
-
 
 <ion-content>
   <ion-list>
@@ -35,11 +19,14 @@
       <p id="console"></p>
     </ion-card-content>
     <ion-card-content>
-      <div *ngFor="let device of deviceList" class="device" id={{device.device.address}}>
+      <div
+        *ngFor="let device of deviceList"
+        class="device"
+        id="{{device.device.address}}"
+      >
         <h2>Device: <b>{{device.device.address}}</b></h2>
         <p>RSSI: {{device.device.rssi}}</p>
       </div>
     </ion-card-content>
   </ion-list>
 </ion-content>
-
