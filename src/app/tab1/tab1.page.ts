@@ -52,9 +52,10 @@ export class Tab1Page implements OnInit {
     document.getElementById('advertise-button').addEventListener('click', this.switchAdvertiseState);
   }
 
-  makeChart(_device): DevicePackage {
+  makeChart(_device, _id): DevicePackage {
 
-      const newChartElement: DevicePackage = {canvasElement: null, chart: null, device: _device, rssi: [_device.rssi], lifetime: 0};
+      const newChartElement: DevicePackage =
+        {canvasElement: null, chart: null, device: _device, rssi: [_device.rssi], lifetime: 0, playerID: _id};
 
       Chart.register(...registerables);
 
@@ -349,7 +350,7 @@ export class Tab1Page implements OnInit {
 
         if(subscriber) {
           //Create new Chart
-          const newDevice: DevicePackage = this.makeChart(_result);
+          const newDevice: DevicePackage = this.makeChart(_result, playerID);
           this.deviceList.push(newDevice);
 
           this.changeDetection.detectChanges();
@@ -532,4 +533,5 @@ interface DevicePackage {
   device: any;
   rssi: number[];
   lifetime: number;
+  playerID: string;
 }
