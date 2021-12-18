@@ -4,6 +4,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Device } from '@awesome-cordova-plugins/device/ngx';
 import { Platform } from '@ionic/angular';
 
+import { Observable } from 'rxjs';
+
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+
 import { BluetoothLE } from '@awesome-cordova-plugins/bluetooth-le/ngx';
 import { Chart, ChartItem, registerables } from 'node_modules/chart.js';
 
@@ -28,7 +32,7 @@ export class Tab1Page implements OnInit {
   url: SafeResourceUrl;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
-              private changeDetection: ChangeDetectorRef, public sanitizer: DomSanitizer) {
+              private changeDetection: ChangeDetectorRef, public sanitizer: DomSanitizer, public http: HttpClient) {
 
     new Promise((resolve) => this._plt.ready().then((readySource) => {
 
@@ -56,6 +60,40 @@ export class Tab1Page implements OnInit {
     document.getElementById('scan-button').addEventListener('click', this.switchScanState);
     document.getElementById('advertise-button').addEventListener('click', this.switchAdvertiseState);
     //this.url = this.sanitizer.bypassSecurityTrustResourceUrl('http://localhost:8000');
+  }
+
+  sendData() {
+    this.prepareDataRequest().subscribe(
+      result => this.log(result, 'status')
+    );
+    //this.log(output.rssi, 'status');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  prepareDataRequest(): Observable<object> {
+    const dataUrl = 'http://127.0.0.1:3000/api';
+    this.deviceList.push({canvasElement: null, chart: null, device: this.device, rssi: [-50], lifetime: 0, playerID: '1234'});
+    // Send Data to Server
+    /*const options = {
+      method: 'POST',
+      headers: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(this.deviceList)
+    };
+
+    try {
+      fetch(dataUrl, options);
+    } catch(err) {
+      console.log(err);
+      this.log(err, 'error');
+    };*/
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    this.log('Ich fetche', 'status');
+    return this.http.post(dataUrl, this.deviceList, { headers });
   }
 
 
