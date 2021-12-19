@@ -73,6 +73,27 @@ export class Tab1Page implements OnInit {
    * @param type defines what the Request is for (possible: initialize, cancel...)
    */
   dataRequest(type: string) {
+
+    // The Websocket of the Device, the Server is running on.
+    const dataWs = 'ws://192.168.0.175:3000/api';
+
+    // Websocket approach
+    // Create WebSocket connection.
+    const socket = new WebSocket(dataWs);
+
+    // Connection opened
+    socket.addEventListener('open', (event) =>
+        socket.send('Hello Server!')
+    );
+
+    // Listen for messages
+    socket.addEventListener('message', (event) =>
+        this.log('Message from server ' + event.data, 'status')
+    );
+
+    // Websocket approach End
+
+    /*
     // The Url of the Device, the Server is running on.
     const dataUrl = 'http://192.168.0.175:3000/api';
     this.deviceList.push({canvasElement: null, chart: null, device: this.device, rssi: [-50], lifetime: 0, playerID: '1234'});
@@ -98,12 +119,15 @@ export class Tab1Page implements OnInit {
             }
             this.log(this.playerID, 'status');
           }
+        } else if(response.type === 'update') {
+
         }
       },
       error: (err: Error) => console.error('Observer got an error: ' + err),
       complete: () => console.log('Observer got a complete notification'),
     };
     myObservable.subscribe(myObserver);
+    */
 
     /*this.http.post(dataUrl, {playerID: this.playerID, deviceList: this.deviceList}, { headers }).subscribe(
       (data) => this.playerID = data.newID,
