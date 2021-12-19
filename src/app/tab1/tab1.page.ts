@@ -4,8 +4,6 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Device } from '@awesome-cordova-plugins/device/ngx';
 import { Platform } from '@ionic/angular';
 
-import { Observable } from 'rxjs';
-
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { BluetoothLE } from '@awesome-cordova-plugins/bluetooth-le/ngx';
@@ -27,7 +25,7 @@ export class Tab1Page implements OnInit {
   //128Bit Letters in Hexadezimal from 0-F. (minus 4 Letters)
   installationPlayerID = '73f97f9e-5c59-44da-bd1a-c1658279';
   //The end of the UUID represents the PlayerID
-  playerID = '8c88';
+  playerID: string;
   intervalID;
   url: SafeResourceUrl;
 
@@ -63,37 +61,54 @@ export class Tab1Page implements OnInit {
   }
 
   sendData() {
-    this.prepareDataRequest().subscribe(
-      result => this.log(result, 'status')
-    );
+    this.dataRequest('initialize');
     //this.log(output.rssi, 'status');
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types
-  prepareDataRequest(): Observable<object> {
-    const dataUrl = 'http://127.0.0.1:3000/api';
+  /**
+   * Hier wird mit dem Server kommuniziert, um gesammelte Daten an den zentralen
+   * Punkt zu senden und um sich für die Intallation als Teilnehmer eine einseutige ID zu holen.
+   *
+   * @param type defines what the Request is for (possible: initialize, cancel...)
+   */
+  dataRequest(type: string) {
+    // The Url of the Device, the Server is running on.
+    const dataUrl = 'http://192.168.0.175:3000/api';
     this.deviceList.push({canvasElement: null, chart: null, device: this.device, rssi: [-50], lifetime: 0, playerID: '1234'});
     // Send Data to Server
-    /*const options = {
-      method: 'POST',
-      headers: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(this.deviceList)
-    };
-
-    try {
-      fetch(dataUrl, options);
-    } catch(err) {
-      console.log(err);
-      this.log(err, 'error');
-    };*/
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = new HttpHeaders({'Content-Type': 'application/json'});
-    this.log('Ich fetche', 'status');
-    return this.http.post(dataUrl, this.deviceList, { headers });
+
+    //Übergebe die identifikation von sich selbst und die eigene DeviceListe.
+    const myObservable = this.http.post(dataUrl,
+      { playerID: this.playerID, update: type, deviceList: this.deviceList }, { headers });
+
+    const myObserver = {
+      next: (response: ServerResponse) => {
+        if(response.type === 'init') {
+          if(response.newID === 'already initialized') {
+            this.log('Device already initialized', 'error');
+          } else {
+            if(!this.playerID) {
+              this.playerID = response.newID;
+            } else {
+              this.log('given new ID, but already got one', 'error');
+            }
+            this.log(this.playerID, 'status');
+          }
+        }
+      },
+      error: (err: Error) => console.error('Observer got an error: ' + err),
+      complete: () => console.log('Observer got a complete notification'),
+    };
+    myObservable.subscribe(myObserver);
+
+    /*this.http.post(dataUrl, {playerID: this.playerID, deviceList: this.deviceList}, { headers }).subscribe(
+      (data) => this.playerID = data.newID,
+      (err) => this.log(err, 'status'),
+    );*/
   }
 
 
@@ -596,4 +611,9 @@ interface DevicePackage {
   rssi: number[];
   lifetime: number;
   playerID: string;
+}
+
+interface ServerResponse {
+  type: string;
+  newID: string;
 }
