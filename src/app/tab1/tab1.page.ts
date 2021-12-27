@@ -28,6 +28,7 @@ export class Tab1Page implements OnInit {
   playerID: string;
   intervalID;
   url: SafeResourceUrl;
+  pingTimeout: any;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
               private changeDetection: ChangeDetectorRef, public sanitizer: DomSanitizer, public http: HttpClient) {
@@ -61,7 +62,10 @@ export class Tab1Page implements OnInit {
   }
 
   sendData() {
+    // Just to test as long as there is no Device in Range.
+    this.deviceList.push({canvasElement: null, chart: null, device: this.device, rssi: [-50], lifetime: 0, playerID: '1234'});
     this.dataRequest('initialize');
+
     //this.log(output.rssi, 'status');
   }
 
@@ -72,10 +76,10 @@ export class Tab1Page implements OnInit {
    *
    * @param type defines what the Request is for (possible: initialize, cancel...)
    */
-  dataRequest(type: string) {
+  dataRequest(type: string = 'initialize') {
 
     // The Websocket of the Device, the Server is running on.
-    const dataWs = 'ws://192.168.0.175:3000/api';
+    const dataWs = 'ws://192.168.178.36:3000/api';
 
     // Websocket approach
     // Create WebSocket connection.
@@ -83,13 +87,58 @@ export class Tab1Page implements OnInit {
 
     // Connection opened
     socket.addEventListener('open', (event) =>
-        socket.send('Hello Server!')
+      socket.send(JSON.stringify({id: this.playerID, list: this.deviceList}))
     );
 
     // Listen for messages
-    socket.addEventListener('message', (event) =>
-        this.log('Message from server ' + event.data, 'status')
-    );
+    socket.addEventListener('message', (event) => {
+      this.log('Message from server: ' + event.data, 'status');
+      if(event.data === 'ping') {
+        clearTimeout(this.pingTimeout);
+
+        // Use `WebSocket#terminate()`, which immediately destroys the connection,
+        // instead of `WebSocket#close()`, which waits for the close timer.
+        // Delay should be equal to the interval at which your server
+        // sends out pings plus a conservative assumption of the latency.
+        this.pingTimeout = setTimeout(() => {
+          socket.close();
+        }, 5000 + 1000);
+      } else if (JSON.parse(event.data).id) {
+        // Wenn die Nachricht eine ID enthält.
+        this.playerID = JSON.parse(event.data).id;
+        this.log('neue ID zugewiesen: ' + this.playerID, 'success');
+      } else {
+        this.log('Die übermittelten Daten sind nicht zulässig!', 'error');
+      }
+    });
+
+    // Connection getting closed
+    socket.addEventListener('close', (event) => {
+      socket.close();
+      this.log('Connection is closed!', 'status');
+    });
+
+    /*socket.addEventListener('ping', (event) =>
+      this.log('this is a ping!', 'status')
+    );*/
+
+    /*
+    *  Set Interval to Ping the Server with new Data every Second. The Data needs to be passed to the Intervalfunction here.
+    *  The Data exists of: The deviceList.
+    */
+    this.intervalID = setInterval(update => {
+      socket.send(JSON.stringify({id: this.playerID, list: this.deviceList}));
+    }, 1000);
+
+    /*socket.addEventListener('open', this.heartbeat);
+
+    socket.addEventListener('ping', this.heartbeat);
+
+    socket.addEventListener('close', function clear() {
+      const extWs = this as ExtWebSocket;
+      clearTimeout(extWs.pingTimeout);
+    });*/
+
 
     // Websocket approach End
 
@@ -134,6 +183,20 @@ export class Tab1Page implements OnInit {
       (err) => this.log(err, 'status'),
     );*/
   }
+
+  //To ping with the Websocket server and test the connection.
+  /*heartbeat(this: any) {
+    console.log('Es wurde gepinged');
+    clearTimeout(this.pingTimeout);
+
+    // Use `WebSocket#terminate()`, which immediately destroys the connection,
+    // instead of `WebSocket#close()`, which waits for the close timer.
+    // Delay should be equal to the interval at which your server
+    // sends out pings plus a conservative assumption of the latency.
+    this.pingTimeout = setTimeout(() => {
+      this.terminate();
+    }, 1000 + 1000);
+  }*/
 
 
   /**
@@ -640,4 +703,9 @@ interface DevicePackage {
 interface ServerResponse {
   type: string;
   newID: string;
+}
+
+// So Typescript knows, that there is an extra boolean parameter.
+interface ExtWebSocket extends WebSocket {
+  pingTimeout: any;
 }
