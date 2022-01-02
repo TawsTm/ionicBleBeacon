@@ -26,7 +26,8 @@ export class Tab1Page implements OnInit {
   installationPlayerID = '73f97f9e-5c59-44da-bd1a-c1658279';
   //The end of the UUID represents the PlayerID
   playerID: string;
-  intervalID;
+  kickIntervalID;
+  sendIntervalID;
   url: SafeResourceUrl;
   pingTimeout: any;
 
@@ -102,6 +103,7 @@ export class Tab1Page implements OnInit {
         // sends out pings plus a conservative assumption of the latency.
         this.pingTimeout = setTimeout(() => {
           socket.close();
+          clearInterval(this.sendIntervalID);
         }, 5000 + 1000);
       } else if (JSON.parse(event.data).id) {
         // Wenn die Nachricht eine ID enthält.
@@ -115,8 +117,14 @@ export class Tab1Page implements OnInit {
     // Connection getting closed
     socket.addEventListener('close', (event) => {
       socket.close();
+      clearInterval(this.sendIntervalID);
       this.log('Connection is closed!', 'status');
     });
+
+    // Error on Socket
+    socket.addEventListener('error', (error) =>
+      this.handleError(error)
+    );
 
     /*socket.addEventListener('ping', (event) =>
       this.log('this is a ping!', 'status')
@@ -126,18 +134,9 @@ export class Tab1Page implements OnInit {
     *  Set Interval to Ping the Server with new Data every Second. The Data needs to be passed to the Intervalfunction here.
     *  The Data exists of: The deviceList.
     */
-    this.intervalID = setInterval(update => {
+    this.sendIntervalID = setInterval(update => {
       socket.send(JSON.stringify({id: this.playerID, list: this.deviceList}));
     }, 1000);
-
-    /*socket.addEventListener('open', this.heartbeat);
-
-    socket.addEventListener('ping', this.heartbeat);
-
-    socket.addEventListener('close', function clear() {
-      const extWs = this as ExtWebSocket;
-      clearTimeout(extWs.pingTimeout);
-    });*/
 
 
     // Websocket approach End
@@ -183,21 +182,6 @@ export class Tab1Page implements OnInit {
       (err) => this.log(err, 'status'),
     );*/
   }
-
-  //To ping with the Websocket server and test the connection.
-  /*heartbeat(this: any) {
-    console.log('Es wurde gepinged');
-    clearTimeout(this.pingTimeout);
-
-    // Use `WebSocket#terminate()`, which immediately destroys the connection,
-    // instead of `WebSocket#close()`, which waits for the close timer.
-    // Delay should be equal to the interval at which your server
-    // sends out pings plus a conservative assumption of the latency.
-    this.pingTimeout = setTimeout(() => {
-      this.terminate();
-    }, 1000 + 1000);
-  }*/
-
 
   /**
    * create a chart for displaying RSSI-values on a graph.
@@ -434,7 +418,7 @@ export class Tab1Page implements OnInit {
         .subscribe(result => this.startScanSuccess(result));
 
         // Kick devices that did not advertise for 1 sec
-        this.intervalID = setInterval(this.kickOldDevices, 1000);
+        this.kickIntervalID = setInterval(this.kickOldDevices, 1000);
 
       } else {
 
@@ -442,7 +426,7 @@ export class Tab1Page implements OnInit {
         this.bluetoothle.stopScan();
 
         // stop the Interval that is kicking inactive devices
-        clearInterval(this.intervalID);
+        clearInterval(this.kickIntervalID);
 
         // clear the device List
         this.deviceList = [];
