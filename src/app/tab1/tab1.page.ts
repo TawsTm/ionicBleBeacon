@@ -80,16 +80,22 @@ export class Tab1Page implements OnInit {
   dataRequest(type: string = 'initialize') {
 
     // The Websocket of the Device, the Server is running on.
-    const dataWs = 'ws://192.168.178.36:3000/api';
+    // Laptop IP: ws://192.168.178.36:3000/api
+    // Desktop IP: ws://192.168.0.175:3000/api
+    const dataWs = 'ws://192.168.0.175:3000/api';
 
     // Websocket approach
     // Create WebSocket connection.
     const socket = new WebSocket(dataWs);
 
     // Connection opened
-    socket.addEventListener('open', (event) =>
-      socket.send(JSON.stringify({id: this.playerID, list: this.deviceList}))
-    );
+    socket.addEventListener('open', (event) => {
+      const rssiPackage: ServerDataPackage[] = [];
+      this.deviceList.forEach(element => {
+        rssiPackage.push({id: element.playerID, rssi: element.rssi[element.rssi.length - 1]});
+      });
+      socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
+    });
 
     // Listen for messages
     socket.addEventListener('message', (event) => {
@@ -135,7 +141,11 @@ export class Tab1Page implements OnInit {
     *  The Data exists of: The deviceList.
     */
     this.sendIntervalID = setInterval(update => {
-      socket.send(JSON.stringify({id: this.playerID, list: this.deviceList}));
+      const rssiPackage: ServerDataPackage[] = [];
+      this.deviceList.forEach(element => {
+        rssiPackage.push({id: element.playerID, rssi: element.rssi[element.rssi.length - 1]});
+      });
+      socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     }, 1000);
 
 
@@ -692,4 +702,9 @@ interface ServerResponse {
 // So Typescript knows, that there is an extra boolean parameter.
 interface ExtWebSocket extends WebSocket {
   pingTimeout: any;
+}
+
+interface ServerDataPackage {
+  id: string;
+  rssi: number;
 }
