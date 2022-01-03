@@ -497,12 +497,12 @@ export class Tab1Page implements OnInit {
         if(this.device.platform === 'iOS') {
           // iOS returns an Object where all Uuids can be read with .serviceUuids
           const uuid = _result.advertisement.serviceUuids[0];
-          // Power Level to normalise the RSSI-Data
-          this.log('Das sollte eigentlich klappen', 'success');
-          this.log(_result.advertisement.txPowerLevel, 'success');
-          // const txPower = _result.advertisement.txPowerLevel;
           // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
           if(uuid.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
+
+            // Power Level to probably normalise the RSSI-Data
+            this.log(_result.advertisement.txPowerLevel, 'success');
+
             subscriber = true;
             playerID = uuid.substring(uuid.length - 4).toLowerCase();
           }
@@ -654,9 +654,10 @@ export class Tab1Page implements OnInit {
 
     this.log('Starting to advertise for other devices...', 'status');
 
+    // Possible variable for better normalisation txPowerLevel: 'high'
     this.bluetoothle.startAdvertising({
       services: [this.installationPlayerID + this.playerID], service: this.installationPlayerID + this.playerID,
-      name: 'BleBeacon', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
+      name: 'BleBeacon', includeDeviceName: false, timeout: 0, mode: 'lowLatency'})
         .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
   };
 
