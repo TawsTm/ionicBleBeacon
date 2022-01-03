@@ -497,6 +497,10 @@ export class Tab1Page implements OnInit {
         if(this.device.platform === 'iOS') {
           // iOS returns an Object where all Uuids can be read with .serviceUuids
           const uuid = _result.advertisement.serviceUuids[0];
+          // Power Level to normalise the RSSI-Data
+          this.log('Das sollte eigentlich klappen', 'success');
+          this.log(_result.advertisement.txPowerLevel, 'success');
+          // const txPower = _result.advertisement.txPowerLevel;
           // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
           if(uuid.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
             subscriber = true;
