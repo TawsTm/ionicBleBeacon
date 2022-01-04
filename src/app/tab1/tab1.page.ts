@@ -492,6 +492,8 @@ export class Tab1Page implements OnInit {
         let subscriber;
         // is the unique playerID for the found device, if its part of the installation.
         let playerID;
+        // is the txPowerLevel for each Device.
+        let txPowerLevel;
 
         // if the found device runs on iOS.
         if(this.device.platform === 'iOS') {
@@ -502,6 +504,7 @@ export class Tab1Page implements OnInit {
 
             // Power Level to probably normalise the RSSI-Data
             this.log(_result.advertisement.txPowerLevel, 'success');
+            txPowerLevel = _result.advertisement.txPowerLevel;
 
             subscriber = true;
             playerID = uuid.substring(uuid.length - 4).toLowerCase();
@@ -513,13 +516,15 @@ export class Tab1Page implements OnInit {
           // conversion returns a Hex-String-Array representation of the advertisement
           const advertisingData = this.parseAdvertisingData(advertisementBytes);
           // ServiceKey 0x07 represents a list of all 128-Bit UUID's provided by the advertisement.
-          const SERVICE_DATA_KEY = '0x07';
+          const SERVICE_DATA_KEY_UUID = '0x07';
           // get the Uuid's at the ServiceKey-position.
-          const serviceData = advertisingData[SERVICE_DATA_KEY];
+          const serviceDataUUID = advertisingData[SERVICE_DATA_KEY_UUID];
+
           // if data is represented then read it.
-          if (serviceData) {
+          if (serviceDataUUID) {
+
             // first 16 bytes are the 128 bit UUID/ServiceID.
-            const uuidBytes = new Uint16Array(serviceData.slice(0,16));
+            const uuidBytes = new Uint16Array(serviceDataUUID.slice(0,16));
             let installationUuid = '';
             for(let i = 7; i > 0; i--) {
               if(i < 6 && i > 1) {
@@ -529,6 +534,20 @@ export class Tab1Page implements OnInit {
             }
             // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
             if(installationUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
+
+              // Power Level to probably normalise the RSSI-Data
+              // ServiceKey 0x0A represents TX Power Level: 0xXX: -127 to +127 dBm.
+              const SERVICE_DATA_KEY_TXPOWER = '0x0a';
+              // get the Uuid's at the ServiceKey-position.
+              const serviceDataTXPOWER = advertisingData[SERVICE_DATA_KEY_TXPOWER];
+              if (serviceDataTXPOWER){
+                const txPowerBytes = new Uint8Array(serviceDataTXPOWER);
+                txPowerLevel = txPowerBytes.toString();
+                this.log('txPowerLevel: ' + txPowerLevel, 'success');
+              } else {
+                //this.log('There is no readable txPower', 'error');
+              }
+
               subscriber = true;
               playerID = uuidBytes[0].toString(16);
             }
@@ -657,7 +676,7 @@ export class Tab1Page implements OnInit {
     // Possible variable for better normalisation txPowerLevel: 'high'
     this.bluetoothle.startAdvertising({
       services: [this.installationPlayerID + this.playerID], service: this.installationPlayerID + this.playerID,
-      name: 'BleBeacon', includeDeviceName: false, timeout: 0, mode: 'lowLatency'})
+      name: 'BleBeacon', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
         .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
   };
 
