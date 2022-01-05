@@ -64,7 +64,6 @@ export class Tab1Page implements OnInit {
 
   sendData() {
     // Just to test as long as there is no Device in Range.
-    this.deviceList.push({canvasElement: null, chart: null, device: this.device, rssi: [-50], lifetime: 0, playerID: '1234'});
     this.dataRequest('initialize');
 
     //this.log(output.rssi, 'status');
@@ -559,7 +558,8 @@ export class Tab1Page implements OnInit {
           // Create new Chart and give the device all its properties.
           const newDevice: DevicePackage = this.makeChart(_result, playerID);
           // add the device to the deviceList.
-          this.deviceList.push(newDevice);
+          //this.deviceList.push(newDevice);
+          this.addToDeviceList(newDevice);
           // upate the angular HTML-components
           this.changeDetection.detectChanges();
           // FOR DEV: add the device RSSI-Chart to be shown in HTML.
@@ -595,6 +595,25 @@ export class Tab1Page implements OnInit {
       }
     }
   };
+
+
+ /**
+  * Diese Funktion sortiert das gegebene Element an die richtige Stelle im Array.
+  * (Die Funktion könnte rechnerisch verbessert werden, indem man in der mitte des Arrays anfängt und sich so zu seinem Platz hin halbiert)
+  *
+  * @param item is the item that needs to be sorted in
+  */
+  addToDeviceList(item: DevicePackage): void {
+
+    this.deviceList.push(item);
+    let j: number = this.deviceList.length - 2;
+    while ((j > -1) && (this.deviceList[j].playerID > item.playerID)) {
+      this.deviceList[j + 1] = this.deviceList[j];
+      j--;
+    }
+    this.deviceList[j + 1] = item;
+
+  }
 
   /**
    * Base64 code is decoded to hex-Array.
