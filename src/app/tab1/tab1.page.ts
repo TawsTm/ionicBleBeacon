@@ -108,6 +108,9 @@ export class Tab1Page implements OnInit {
         // sends out pings plus a conservative assumption of the latency.
         this.pingTimeout = setTimeout(() => {
           socket.close();
+          // Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
+          this.playerID = '';
+          this.log('Connection is closed due to timeout!', 'status');
           clearInterval(this.sendIntervalID);
         }, 5000 + 1000);
       } else if (JSON.parse(event.data).id) {
@@ -122,6 +125,8 @@ export class Tab1Page implements OnInit {
     // Connection getting closed
     socket.addEventListener('close', (event) => {
       socket.close();
+      // Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
+      this.playerID = '';
       clearInterval(this.sendIntervalID);
       this.log('Connection is closed!', 'status');
     });
@@ -554,7 +559,10 @@ export class Tab1Page implements OnInit {
         }
 
         // add a new entry to deviceList if the found device is part of the installation.
-        if(subscriber) {
+        // Falls das Gerät während des sendens, die Adresse wechselt. Sonst hätte man zwei mal die selbe ID im Packet.
+        if(subscriber && (!this.deviceList.some((device) =>
+        device.playerID === playerID
+      ))) {
           // Create new Chart and give the device all its properties.
           const newDevice: DevicePackage = this.makeChart(_result, playerID);
           // add the device to the deviceList.
