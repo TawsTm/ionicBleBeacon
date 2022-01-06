@@ -108,7 +108,8 @@ export class Tab1Page implements OnInit {
         // sends out pings plus a conservative assumption of the latency.
         this.pingTimeout = setTimeout(() => {
           socket.close();
-          // Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
+          this.stopAdvertising();
+          // (not necessary) Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
           this.playerID = '';
           this.log('Connection is closed due to timeout!', 'status');
           clearInterval(this.sendIntervalID);
@@ -125,7 +126,8 @@ export class Tab1Page implements OnInit {
     // Connection getting closed
     socket.addEventListener('close', (event) => {
       socket.close();
-      // Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
+      this.stopAdvertising();
+      // (not necessary) Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
       this.playerID = '';
       clearInterval(this.sendIntervalID);
       this.log('Connection is closed!', 'status');
