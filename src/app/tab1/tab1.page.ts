@@ -98,7 +98,7 @@ export class Tab1Page implements OnInit {
 
     // Listen for messages
     socket.addEventListener('message', (event) => {
-      this.log('Message from server: ' + event.data, 'status');
+      //this.log('Message from server: ' + event.data, 'status');
       if(event.data === 'ping') {
         clearTimeout(this.pingTimeout);
 
@@ -154,49 +154,6 @@ export class Tab1Page implements OnInit {
       socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     }, 1000);
 
-
-    // Websocket approach End
-
-    /*
-    // The Url of the Device, the Server is running on.
-    const dataUrl = 'http://192.168.0.175:3000/api';
-    this.deviceList.push({canvasElement: null, chart: null, device: this.device, rssi: [-50], lifetime: 0, playerID: '1234'});
-    // Send Data to Server
-
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
-
-    //Übergebe die identifikation von sich selbst und die eigene DeviceListe.
-    const myObservable = this.http.post(dataUrl,
-      { playerID: this.playerID, update: type, deviceList: this.deviceList }, { headers });
-
-    const myObserver = {
-      next: (response: ServerResponse) => {
-        if(response.type === 'init') {
-          if(response.newID === 'already initialized') {
-            this.log('Device already initialized', 'error');
-          } else {
-            if(!this.playerID) {
-              this.playerID = response.newID;
-            } else {
-              this.log('given new ID, but already got one', 'error');
-            }
-            this.log(this.playerID, 'status');
-          }
-        } else if(response.type === 'update') {
-
-        }
-      },
-      error: (err: Error) => console.error('Observer got an error: ' + err),
-      complete: () => console.log('Observer got a complete notification'),
-    };
-    myObservable.subscribe(myObserver);
-    */
-
-    /*this.http.post(dataUrl, {playerID: this.playerID, deviceList: this.deviceList}, { headers }).subscribe(
-      (data) => this.playerID = data.newID,
-      (err) => this.log(err, 'status'),
-    );*/
   }
 
   /**
@@ -213,7 +170,7 @@ export class Tab1Page implements OnInit {
     // create the new device with dummyElements.
     const newChartElement: DevicePackage =
       {canvasElement: null, chart: null, device: _device, rssi: [_device.rssi], lifetime: 0, playerID: _id};
-
+    /*
     // needed for Chart to show.
     Chart.register(...registerables);
     //create empty elements that can be filled with the chart.
@@ -248,6 +205,7 @@ export class Tab1Page implements OnInit {
     });
     newChartElement.chart = myChart;
     newChartElement.canvasElement = htmlElementContainer;
+    */
 
     //returns the newly createt deviceElement
     return newChartElement;
@@ -295,7 +253,7 @@ export class Tab1Page implements OnInit {
   /**
    * Wenn ein Error beim Scan auftritt
    *
-   * @param _error the error massage that should be printed.
+   * @param _error the error message that should be printed.
    */
   handleError = (_error) => {
 
