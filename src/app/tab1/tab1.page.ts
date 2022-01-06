@@ -697,7 +697,8 @@ export class Tab1Page implements OnInit {
    * starts the advertising of the given data.
    */
   startAdvertising = () => {
-    if (this.playerID === '') {
+    // Just start advertising if a PlayerID is given, so that the send UUID is valid.
+    if (this.playerID === '' || !this.playerID) {
       this.log('Player-ID is not set yet!', 'error');
     } else {
       this.log('Starting to advertise for other devices...', 'status');
