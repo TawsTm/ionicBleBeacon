@@ -697,14 +697,17 @@ export class Tab1Page implements OnInit {
    * starts the advertising of the given data.
    */
   startAdvertising = () => {
+    if (this.playerID === '') {
+      this.log('Player-ID is not set yet!', 'error');
+    } else {
+      this.log('Starting to advertise for other devices...', 'status');
 
-    this.log('Starting to advertise for other devices...', 'status');
-
-    // Possible variable for better normalisation txPowerLevel: 'high'
-    this.bluetoothle.startAdvertising({
-      services: [this.installationPlayerID + this.playerID], service: this.installationPlayerID + this.playerID,
-      name: 'BleBeacon', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
-        .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
+      // Possible variable for better normalisation txPowerLevel: 'high'
+      this.bluetoothle.startAdvertising({
+        services: [this.installationPlayerID + this.playerID], service: this.installationPlayerID + this.playerID,
+        name: 'BleBeacon', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
+          .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
+    }
   };
 
   /**
