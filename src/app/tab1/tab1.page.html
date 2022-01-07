@@ -1,35 +1,48 @@
-<ion-header [translucent]="false" [mode]="deviceMode">
-  <div class="header">
-    <ion-icon name="Bluetooth" color="primary"></ion-icon>
-    <ion-toolbar>
-      <ion-buttons slot="start">
-        <ion-button id="advertise-button" fill="clear"> Advertise </ion-button>
-      </ion-buttons>
+<ion-app>
+  <ion-header [translucent]="false" [mode]="deviceMode">
+    <div class="header">
+      <ion-icon name="Bluetooth" color="primary"></ion-icon>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button id="advertise-button" fill="clear"> Advertise </ion-button>
+        </ion-buttons>
 
-      <ion-buttons slot="end">
-        <ion-button id="scan-button" fill="clear"> Scan Devices </ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </div>
-</ion-header>
+        <ion-buttons slot="end">
+          <ion-button id="scan-button" fill="clear"> Scan Devices </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </div>
+  </ion-header>
 
-<!--<iframe [src]="url"></iframe>-->
-<button (click)="sendData()" style="height: 50px" id="sendButton">Open Connection</button>
+  <ion-content fullscreen>
 
-<ion-content>
-  <ion-list>
-    <ion-card-content id="console-container">
-      <p id="console"></p>
-    </ion-card-content>
-    <ion-card-content>
-      <div
-        *ngFor="let device of deviceList"
-        class="device"
-        id="{{device.device.address}}"
-      >
-        <h2>Device: <b>{{device.device.address}}</b></h2>
-        <p>RSSI: {{device.device.rssi}}</p>
-      </div>
-    </ion-card-content>
-  </ion-list>
-</ion-content>
+    <ion-button expand="full" color="light" (click)="dataRequest()">Open Connection</ion-button>
+
+    <ion-list>
+      <ion-card-content id="console-container">
+        <p id="console"></p>
+      </ion-card-content>
+    </ion-list>
+
+    <section>
+      <ion-button expand="full" color="primary" (click)="startConnection()">Join</ion-button>
+    </section>
+
+    <ion-list>
+      <ion-item>
+        <ion-label><b>Found Devices</b></ion-label>
+        <ion-badge slot="end">{{deviceList.length}}</ion-badge>
+      </ion-item>
+    </ion-list>
+
+    <ion-list>
+      <ion-item *ngFor="let device of deviceList"
+      class="device"
+      id="{{device.device.address}}">
+        <ion-label>{{device.playerID}}</ion-label>
+        <ion-badge slot="end" color="medium">{{device.rssi[device.rssi.length - 1]}}</ion-badge>
+      </ion-item>
+    </ion-list>
+
+  </ion-content>
+</ion-app>

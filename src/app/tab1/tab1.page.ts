@@ -62,9 +62,18 @@ export class Tab1Page implements OnInit {
     //this.url = this.sanitizer.bypassSecurityTrustResourceUrl('http://localhost:8000');
   }
 
-  sendData() {
+  startConnection() {
     // Just to test as long as there is no Device in Range.
     this.dataRequest('initialize');
+    // TODO Switch the Timeout with an await that waits until the PlayerID is set.
+    setTimeout(() => {
+      if (this.playerID !== '' || this.playerID) {
+        this.switchAdvertiseState();
+        this.switchScanState();
+      } else {
+        this.log('The Server did not respond within 1 Sec', 'error');
+      }
+    }, 1000);
 
     //this.log(output.rssi, 'status');
   }
