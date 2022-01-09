@@ -90,7 +90,7 @@ export class Tab1Page implements OnInit {
     // The Websocket of the Device, the Server is running on.
     // Laptop IP: ws://192.168.178.36:3000/api
     // Desktop IP: ws://192.168.0.175:3000/api
-    const dataWs = 'ws://192.168.0.175:3000/api';
+    const dataWs = 'ws://blebeacon.loca.lt';
 
     // Websocket approach
     // Create WebSocket connection.
