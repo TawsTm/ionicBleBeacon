@@ -22,8 +22,8 @@ export class Tab1Page implements OnInit {
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
-  //128Bit Letters in Hexadezimal from 0-F. (minus 4 Letters)
-  installationPlayerID = '73f97f9e-5c59-44da-bd1a-c1658279';
+  //128Bit Letters in Hexadezimal from 0-F. (minus 4 Letters) am ende gelöscht 79
+  installationPlayerID = '73f97f9e-5c59-44da-bd1a-c16582';
   //The end of the UUID represents the PlayerID
   playerID: string;
   kickIntervalID;
