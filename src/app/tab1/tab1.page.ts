@@ -548,8 +548,10 @@ export class Tab1Page implements OnInit {
             this.log(_result.advertisement.txPowerLevel, 'success');
             txPowerLevel = _result.advertisement.txPowerLevel;
 
+            // The PlayerID are represented in the last 6 Digits of the UUID
+            playerID = uuid.substring(uuid.length - 6).toLowerCase();
+
             subscriber = true;
-            playerID = uuid.substring(uuid.length - 4).toLowerCase();
           }
           // if the found device runs on Android.
         } else if (this.device.platform === 'Android') {
@@ -567,15 +569,16 @@ export class Tab1Page implements OnInit {
 
             // first 16 bytes are the 128 bit UUID/ServiceID.
             const uuidBytes = new Uint16Array(serviceDataUUID.slice(0,16));
-            let installationUuid = '';
-            for(let i = 7; i > 0; i--) {
+            let fullUUID = '';
+            for(let i = 8; i > 0; i--) {
               if(i < 6 && i > 1) {
-                installationUuid += '-';
+                fullUUID += '-';
               }
-              installationUuid += uuidBytes[i].toString(16);
+              fullUUID += uuidBytes[i].toString(16);
             }
+
             // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
-            if(installationUuid.toLowerCase() === this.installationPlayerID.toLowerCase()) {
+            if(fullUUID.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
 
               // Power Level to probably normalise the RSSI-Data
               // ServiceKey 0x0A represents TX Power Level: 0xXX: -127 to +127 dBm.
@@ -590,8 +593,10 @@ export class Tab1Page implements OnInit {
                 //this.log('There is no readable txPower', 'error');
               }
 
+              // The PlayerID are represented in the last 6 Digits of the UUID
+              playerID = fullUUID.substring(fullUUID.length - 6).toLowerCase();
+
               subscriber = true;
-              playerID = uuidBytes[0].toString(16);
             }
           }
         }
@@ -600,7 +605,7 @@ export class Tab1Page implements OnInit {
         // Falls das Gerät während des sendens, die Adresse wechselt. Sonst hätte man zwei mal die selbe ID im Packet.
         if(subscriber && (!this.deviceList.some((device) =>
         device.playerID === playerID
-      ))) {
+        ))) {
           // Create new Chart and give the device all its properties.
           const newDevice: DevicePackage = this.makeChart(_result, playerID);
           // add the device to the deviceList.
