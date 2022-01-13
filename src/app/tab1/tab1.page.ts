@@ -22,7 +22,7 @@ export class Tab1Page implements OnInit {
   public deviceMode = 'md';
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
-  //128Bit Letters in Hexadezimal from 0-F. (minus 4 Letters) am ende gelöscht 79
+  //128Bit Letters in Hexadezimal from 0-F. (minus 6 Letters) am ende gelöscht 79
   installationPlayerID = '73f97f9e-5c59-44da-bd1a-c16582';
   //The end of the UUID represents the PlayerID
   playerID: string;
@@ -68,8 +68,8 @@ export class Tab1Page implements OnInit {
     // TODO Switch the Timeout with an await that waits until the PlayerID is set.
     setTimeout(() => {
       if (this.playerID !== '' || this.playerID) {
-        this.switchAdvertiseState();
-        this.switchScanState();
+        this.startAdvertising();
+        this.startScanning();
       } else {
         this.log('The Server did not respond within 1 Sec', 'error');
       }
@@ -118,8 +118,9 @@ export class Tab1Page implements OnInit {
         this.pingTimeout = setTimeout(() => {
           socket.close();
           this.stopAdvertising();
+          this.stopScanning();
           // (not necessary) Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
-          this.playerID = '';
+          // this.playerID = '';
           this.log('Connection is closed due to timeout!', 'status');
           clearInterval(this.sendIntervalID);
         }, 5000 + 1000);
@@ -136,8 +137,9 @@ export class Tab1Page implements OnInit {
     socket.addEventListener('close', (event) => {
       socket.close();
       this.stopAdvertising();
+      this.stopScanning();
       // (not necessary) Delete the PlayerID so the Server does not get confused if someone else finds this device with this id.
-      this.playerID = '';
+      // this.playerID = '';
       clearInterval(this.sendIntervalID);
       this.log('Connection is closed!', 'status');
     });
@@ -396,6 +398,61 @@ export class Tab1Page implements OnInit {
 
         }
 
+        this.startScanning();
+
+      } else {
+
+        this.stopScanning();
+
+      }
+    });
+  };
+
+  startScanning() {
+
+    // Check if the device is already scanning.
+    this.bluetoothle.isScanning().then((status) => {
+      if(!status.isScanning) {
+
+        // check if the App has permission to coarse location and ask to activate if not.
+        this.bluetoothle.hasPermission().then((readySource) => {
+
+          if(!readySource.hasPermission) {
+            this.bluetoothle.requestPermission().then((permissionStatus) => {
+              if(permissionStatus.requestPermission) {
+                this.log('Permission granted', 'success');
+              } else {
+                this.log('Permission denied', 'error');
+              }
+            },
+            (error) => this.handleError(error));
+          }
+        });
+
+        if(this.device.platform === 'Android') {
+
+          // Check if the App can use GeoLocation, because its needed.
+          this.bluetoothle.isLocationEnabled().then((readySource) => {
+
+            if(!readySource.isLocationEnabled) {
+              this.bluetoothle.requestLocation().then((locatioStatus) => {
+                if(locatioStatus.requestLocation) {
+                  this.log('Location activated', 'success');
+                } else {
+                  this.log('Location denied', 'error');
+                }
+              },
+              (error) => this.handleError(error));
+            }
+          },
+          (error) => this.handleError(error));
+
+        } else if (this.device.platform === 'iOS') {
+
+          this.deviceMode = 'ios';
+
+        }
+
         // Start to actually scan with adapter.
         this.bluetoothle.startScan({ allowDuplicates: true })
         .subscribe(result => this.startScanSuccess(result));
@@ -404,6 +461,16 @@ export class Tab1Page implements OnInit {
         this.kickIntervalID = setInterval(this.kickOldDevices, 1000);
 
       } else {
+        this.log('The Device is already scanning!', 'status');
+      }
+    }, (error) => this.handleError(error));
+  }
+
+  stopScanning() {
+
+    // Check if the device has already stopped scanning.
+    this.bluetoothle.isScanning().then((status) => {
+      if(status.isScanning) {
 
         // stop the scan on adapter
         this.bluetoothle.stopScan();
@@ -415,9 +482,11 @@ export class Tab1Page implements OnInit {
         this.deviceList = [];
 
         this.log('Stopping Scan...', 'status');
+      } else {
+        this.log('The Device is not scanning!', 'status');
       }
-    });
-  };
+    }, (error) => this.handleError(error));
+  }
 
   /**
    * this function decodes a given Unicode String.
@@ -670,13 +739,20 @@ export class Tab1Page implements OnInit {
     if (this.playerID === '' || !this.playerID) {
       this.log('Player-ID is not set yet!', 'error');
     } else {
-      this.log('Starting to advertise for other devices...', 'status');
+      this.bluetoothle.isAdvertising().then(
+        (status) => {
+          if(status.isAdvertising) {
+            this.log('Already Advertising', 'status');
+          } else {
+            this.log('Starting to advertise for other devices...', 'status');
 
-      // Possible variable for better normalisation txPowerLevel: 'high'
-      this.bluetoothle.startAdvertising({
-        services: [this.installationPlayerID + this.playerID], service: this.installationPlayerID + this.playerID,
-        name: 'BleBeacon', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
-          .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
+            // Possible variable for better normalisation txPowerLevel: 'high'
+            this.bluetoothle.startAdvertising({
+              services: [this.installationPlayerID + this.playerID], service: this.installationPlayerID + this.playerID,
+              name: 'BleBeacon', includeDeviceName: false, timeout: 0, txPowerLevel: 'high', mode: 'lowLatency'})
+                .then(result => this.startAdvertisingSuccess(result), error => this.handleError(error));
+          }
+        }, (error) => this.handleError(error));
     }
   };
 
@@ -685,10 +761,17 @@ export class Tab1Page implements OnInit {
    */
   stopAdvertising = () => {
 
-    this.log('Cancelling to advertise for other devices...', 'status');
+    this.bluetoothle.isAdvertising().then(
+      (status) => {
+        if(!status.isAdvertising) {
+          this.log('Device is not Advertising!', 'status');
+        } else {
+          this.log('Cancelling to advertise for other devices...', 'status');
 
-    this.bluetoothle.stopAdvertising()
-        .then(result => this.stopAdvertisingSuccess(result), error => this.handleError(error));
+          this.bluetoothle.stopAdvertising()
+              .then(result => this.stopAdvertisingSuccess(result), error => this.handleError(error));
+        }
+      });
   };
 
   startAdvertisingSuccess = (_result) => {
