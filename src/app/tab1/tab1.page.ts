@@ -18,8 +18,8 @@ import { Chart, ChartItem, registerables } from 'node_modules/chart.js';
 export class Tab1Page implements OnInit {
 
   public device: Device;
-  //For the right HTML Mode
-  public deviceMode = 'md';
+  //For the right ionic HTML Mode
+  public deviceMode: string;
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
   //128Bit Letters in Hexadezimal from 0-F. (minus 6 Letters) am ende gelöscht 79
@@ -39,6 +39,11 @@ export class Tab1Page implements OnInit {
       console.log('Platform ready from', readySource);
       // initialize the device itself.
       this.device = this._device;
+      if(this.device.platform === 'iOS') {
+        this.deviceMode = 'ios';
+      } else {
+        this.deviceMode = 'md';
+      };
       // make an accessible bluetoothLE intance of plugin cordova-plugin-bluetoothle
       this.bluetoothle = this._bluetoothle;
 
@@ -127,6 +132,8 @@ export class Tab1Page implements OnInit {
       } else if (JSON.parse(event.data).id) {
         // Wenn die Nachricht eine ID enthält.
         this.playerID = JSON.parse(event.data).id;
+        //To update the Angular Components
+        this.changeDetection.detectChanges();
         this.log('neue ID zugewiesen: ' + this.playerID, 'success');
       } else {
         this.log('Die übermittelten Daten sind nicht zulässig!', 'error');
@@ -612,7 +619,7 @@ export class Tab1Page implements OnInit {
           // add the device to the deviceList.
           //this.deviceList.push(newDevice);
           this.addToDeviceList(newDevice);
-          // upate the angular HTML-components
+          // update the angular HTML-components
           this.changeDetection.detectChanges();
           // FOR DEV: add the device RSSI-Chart to be shown in HTML.
           document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
@@ -796,6 +803,21 @@ export class Tab1Page implements OnInit {
       this.log('Something with the Advertising-Stop went wrong!', 'error');
     }
   };
+
+  getContrastingColor(_color: string): string {
+    const rgb = this.hexToRgb(_color);
+    const isLight = rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114 > 186;
+    return isLight ? 'black' : 'white';
+  }
+
+  hexToRgb(_color: string): {r: number; g: number; b: number} {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(_color);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
 
 }
 

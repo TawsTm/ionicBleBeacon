@@ -1,5 +1,5 @@
 <ion-app>
-  <ion-header [translucent]="false" [mode]="deviceMode">
+  <ion-header translucent="false" mode={{deviceMode}}>
     <div class="header">
       <ion-icon name="Bluetooth" color="primary"></ion-icon>
       <ion-toolbar>
@@ -24,6 +24,12 @@
       </ion-card-content>
     </ion-list>
 
+    <ion-text *ngIf="playerID" color="secondary" style="display: flex; justify-content: center; align-items: center;">
+      <div [ngStyle]="{'background-color': '#' + playerID}" style="position: relative; height: 50vw; width: 50%; display: flex; justify-content: center; align-items: center; border-radius: 50%;">
+        <h1 [ngStyle]="{'color': getContrastingColor('#' + playerID)}">{{playerID}}</h1>
+      </div>
+    </ion-text>
+
     <section>
       <ion-button expand="full" color="primary" (click)="startConnection()">Join</ion-button>
     </section>
@@ -39,8 +45,8 @@
       <ion-item *ngFor="let device of deviceList"
       class="device"
       id="{{device.device.address}}">
-        <ion-label>{{device.playerID}}</ion-label>
-        <ion-badge slot="end" color="medium">{{device.rssi[device.rssi.length - 1]}}</ion-badge>
+        <ion-label [ngStyle]="{'color': '#' + device.playerID}">{{device.playerID}}</ion-label>
+        <ion-badge slot="end" [ngStyle]="{'background-color': '#' + device.playerID}">{{device.rssi[device.rssi.length - 1]}}</ion-badge>
       </ion-item>
     </ion-list>
 
