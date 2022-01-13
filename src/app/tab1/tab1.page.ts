@@ -545,16 +545,17 @@ export class Tab1Page implements OnInit {
           if(uuid.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
 
             // Power Level to probably normalise the RSSI-Data
-            this.log(_result.advertisement.txPowerLevel, 'success');
             txPowerLevel = _result.advertisement.txPowerLevel;
 
             // The PlayerID are represented in the last 6 Digits of the UUID
             playerID = uuid.substring(uuid.length - 6).toLowerCase();
 
+            // True if the Player is part of the installation
             subscriber = true;
           }
           // if the found device runs on Android.
         } else if (this.device.platform === 'Android') {
+
           //Android returns a Base64 Code that needs conversion.
           const advertisementBytes = this.bluetoothle.encodedStringToBytes(_result.advertisement);
           // conversion returns a Hex-String-Array representation of the advertisement
@@ -570,7 +571,7 @@ export class Tab1Page implements OnInit {
             // first 16 bytes are the 128 bit UUID/ServiceID.
             const uuidBytes = new Uint16Array(serviceDataUUID.slice(0,16));
             let fullUUID = '';
-            for(let i = 8; i > 0; i--) {
+            for(let i = 7; i >= 0; i--) {
               if(i < 6 && i > 1) {
                 fullUUID += '-';
               }
@@ -587,8 +588,8 @@ export class Tab1Page implements OnInit {
               const serviceDataTXPOWER = advertisingData[SERVICE_DATA_KEY_TXPOWER];
               if (serviceDataTXPOWER){
                 const txPowerBytes = new Uint8Array(serviceDataTXPOWER);
+                // Power Level to probably normalise the RSSI-Data
                 txPowerLevel = txPowerBytes.toString();
-                this.log('txPowerLevel: ' + txPowerLevel, 'success');
               } else {
                 //this.log('There is no readable txPower', 'error');
               }
@@ -617,6 +618,7 @@ export class Tab1Page implements OnInit {
           document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
 
           this.log('Found Device: ' + playerID, 'status');
+          this.log('txPowerLevel: ' + txPowerLevel, 'success');
         }
 
       } else {
