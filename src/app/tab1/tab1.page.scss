@@ -43,6 +43,14 @@ ion-list {
   }
 }
 
+#dev {
+  position: absolute;
+  width: 100%;
+  // Translate to 0 if the dev-Tools are needed.
+  transform: translateY(-100%);
+  z-index: 99;
+}
+
 #divChart {
   display: block;
   width: 400px;
@@ -56,4 +64,56 @@ ion-list {
 
 .device {
   border-bottom: rgb(192,192,192) solid 1px;
+}
+
+.mainContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+}
+
+.idContainer {
+  text-align: center;
+  h1{
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: 1em;
+  }
+}
+
+.picContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+
+  .picHalf {
+    position: relative;
+    display: grid;
+    width: 60px;
+    height: 80px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+  }
+}
+
+#idPic-wrapper {
+
+}
+
+#idPic-wrapper-flipped {
+  -moz-transform: scaleX(-1);
+	-o-transform: scaleX(-1);
+	-webkit-transform: scaleX(-1);
+	transform: scaleX(-1);
+}
+
+.nofill{
+  background-color: white;
+}
+.fill{
+  background-color: black;
 }

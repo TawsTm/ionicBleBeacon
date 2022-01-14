@@ -15,40 +15,49 @@
   </ion-header>
 
   <ion-content fullscreen>
+    <div id="dev">
+      <ion-button expand="full" color="light" (click)="dataRequest()">Open Connection</ion-button>
 
-    <ion-button expand="full" color="light" (click)="dataRequest()">Open Connection</ion-button>
+      <ion-list>
+        <ion-card-content id="console-container">
+          <p id="console"></p>
+        </ion-card-content>
+      </ion-list>
 
-    <ion-list>
-      <ion-card-content id="console-container">
-        <p id="console"></p>
-      </ion-card-content>
-    </ion-list>
+      <section>
+        <ion-button expand="full" color="primary" (click)="startConnection()">Join</ion-button>
+      </section>
 
-    <ion-text *ngIf="playerID" color="secondary" style="display: flex; justify-content: center; align-items: center;">
-      <div [ngStyle]="{'background-color': '#' + playerID}" style="position: relative; height: 50vw; width: 50%; display: flex; justify-content: center; align-items: center; border-radius: 50%;">
-        <h1 [ngStyle]="{'color': getContrastingColor('#' + playerID)}">{{playerID}}</h1>
+      <ion-list>
+        <ion-item>
+          <ion-label><b>Found Devices</b></ion-label>
+          <ion-badge slot="end">{{deviceList.length}}</ion-badge>
+        </ion-item>
+      </ion-list>
+
+      <ion-list>
+        <ion-item *ngFor="let device of deviceList"
+        class="device"
+        id="{{device.device.address}}">
+          <ion-label [ngStyle]="{'color': '#' + device.playerID}">{{device.playerID}}</ion-label>
+          <ion-badge slot="end" [ngStyle]="{'background-color': '#' + device.playerID}">{{device.rssi[device.rssi.length - 1]}}</ion-badge>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Ab hier kommt der Content, welcher für den Nutzer sichtbar sein sollte -->
+    <div class="mainContainer" [ngStyle]="{'background-color': '#' + playerID}">
+
+      <div class="idContainer">
+        <h1 [ngStyle]="{'color': getContrastingColor(playerID)}">{{playerID}}</h1>
       </div>
-    </ion-text>
+      <div class="picContainer">
+        <div class="picHalf" id="idPic-wrapper"></div>
+        <div class="picHalf" id="idPic-wrapper-flipped"></div>
+      </div>
 
-    <section>
-      <ion-button expand="full" color="primary" (click)="startConnection()">Join</ion-button>
-    </section>
 
-    <ion-list>
-      <ion-item>
-        <ion-label><b>Found Devices</b></ion-label>
-        <ion-badge slot="end">{{deviceList.length}}</ion-badge>
-      </ion-item>
-    </ion-list>
-
-    <ion-list>
-      <ion-item *ngFor="let device of deviceList"
-      class="device"
-      id="{{device.device.address}}">
-        <ion-label [ngStyle]="{'color': '#' + device.playerID}">{{device.playerID}}</ion-label>
-        <ion-badge slot="end" [ngStyle]="{'background-color': '#' + device.playerID}">{{device.rssi[device.rssi.length - 1]}}</ion-badge>
-      </ion-item>
-    </ion-list>
+    </div>
 
   </ion-content>
 </ion-app>

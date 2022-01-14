@@ -72,13 +72,13 @@ export class Tab1Page implements OnInit {
     this.dataRequest('initialize');
     // TODO Switch the Timeout with an await that waits until the PlayerID is set.
     setTimeout(() => {
-      if (this.playerID !== '' || this.playerID) {
+      if (this.playerID !== '' && this.playerID) {
         this.startAdvertising();
         this.startScanning();
       } else {
-        this.log('The Server did not respond within 1 Sec', 'error');
+        this.log('Abort: The Server did not respond within 3 Sec', 'error');
       }
-    }, 1000);
+    }, 3000);
 
     //this.log(output.rssi, 'status');
   }
@@ -132,6 +132,8 @@ export class Tab1Page implements OnInit {
       } else if (JSON.parse(event.data).id) {
         // Wenn die Nachricht eine ID enthält.
         this.playerID = JSON.parse(event.data).id;
+        // Set the PlayerPic
+        this.drawIdPic(this.playerID);
         //To update the Angular Components
         this.changeDetection.detectChanges();
         this.log('neue ID zugewiesen: ' + this.playerID, 'success');
@@ -817,6 +819,28 @@ export class Tab1Page implements OnInit {
       g: parseInt(result[2], 16),
       b: parseInt(result[3], 16)
     } : null;
+  }
+
+  drawIdPic(_id: string) {
+    const contrastColor = this.getContrastingColor(_id);
+    this.log(_id, 'status');
+    const id = this.hex2bin(_id);
+    this.log(id, 'status');
+    const container = document.getElementById('idPic-wrapper');
+    const containerFlipped = document.getElementById('idPic-wrapper-flipped');
+    for (const i of id) {
+      const div = document.createElement('div');
+      const div2 = document.createElement('div');
+      if (i === '1') {
+        div.style.backgroundColor = div2.style.backgroundColor = contrastColor;
+      }
+      container.appendChild(div);
+      containerFlipped.appendChild(div2);
+    }
+  }
+
+  hex2bin(hex){
+    return (parseInt(hex, 16).toString(2)).padStart(24, '0');
   }
 
 }
