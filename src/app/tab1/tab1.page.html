@@ -48,6 +48,8 @@
     <!-- Ab hier kommt der Content, welcher für den Nutzer sichtbar sein sollte -->
     <div class="mainContainer" [ngStyle]="{'background-color': '#' + playerID}">
 
+      <div id="radar" [ngStyle]="{'border-color': getContrastingColor(playerID)}"></div>
+
       <div class="idContainer">
         <h1 [ngStyle]="{'color': getContrastingColor(playerID)}">{{playerID}}</h1>
       </div>
@@ -55,6 +57,8 @@
         <div class="picHalf" id="idPic-wrapper"></div>
         <div class="picHalf" id="idPic-wrapper-flipped"></div>
       </div>
+
+      <div id="connect" (click)="startConnection()" [ngStyle]="{'background-color': getContrastingColor(playerID), 'color': '#' + playerID}">Connect</div>
 
 
     </div>

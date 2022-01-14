@@ -64,6 +64,7 @@ export class Tab1Page implements OnInit {
   ngOnInit() {
     document.getElementById('scan-button').addEventListener('click', this.switchScanState);
     document.getElementById('advertise-button').addEventListener('click', this.switchAdvertiseState);
+    this.drawIdPic(this.playerID);
     //this.url = this.sanitizer.bypassSecurityTrustResourceUrl('http://localhost:8000');
   }
 
@@ -134,6 +135,9 @@ export class Tab1Page implements OnInit {
         this.playerID = JSON.parse(event.data).id;
         // Set the PlayerPic
         this.drawIdPic(this.playerID);
+        // Don't show connect button anymore and start animation of radar
+        document.getElementById('connect').style.visibility = 'hidden';
+        document.getElementById('radar').style.visibility = 'visible';
         //To update the Angular Components
         this.changeDetection.detectChanges();
         this.log('neue ID zugewiesen: ' + this.playerID, 'success');
