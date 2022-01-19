@@ -30,6 +30,7 @@ export class Tab1Page implements OnInit {
   sendIntervalID;
   url: SafeResourceUrl;
   pingTimeout: any;
+  showConsole = false;
 
   constructor(private _device: Device, public _bluetoothle: BluetoothLE, public _plt: Platform,
               private changeDetection: ChangeDetectorRef, public sanitizer: DomSanitizer, public http: HttpClient) {
@@ -845,6 +846,15 @@ export class Tab1Page implements OnInit {
 
   hex2bin(hex){
     return (parseInt(hex, 16).toString(2)).padStart(24, '0');
+  }
+
+  toggleConsole() {
+    if(!this.showConsole) {
+      document.getElementById('dev').style.transform = 'translateY(0%)';
+    } else {
+      document.getElementById('dev').style.transform = 'translateY(-100%)';
+    }
+    this.showConsole = !this.showConsole;
   }
 
 }

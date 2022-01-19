@@ -2,6 +2,12 @@
   <ion-header translucent="false" mode={{deviceMode}}>
     <div class="header">
       <ion-icon name="Bluetooth" color="primary"></ion-icon>
+    </div>
+  </ion-header>
+
+  <ion-content fullscreen>
+    <div id="dev">
+
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-button id="advertise-button" fill="clear"> Advertise </ion-button>
@@ -11,11 +17,7 @@
           <ion-button id="scan-button" fill="clear"> Scan Devices </ion-button>
         </ion-buttons>
       </ion-toolbar>
-    </div>
-  </ion-header>
 
-  <ion-content fullscreen>
-    <div id="dev">
       <ion-button expand="full" color="light" (click)="dataRequest()">Open Connection</ion-button>
 
       <ion-list>
@@ -43,6 +45,7 @@
           <ion-badge slot="end" [ngStyle]="{'background-color': '#' + device.playerID}">{{device.rssi[device.rssi.length - 1]}}</ion-badge>
         </ion-item>
       </ion-list>
+      <div (click)="toggleConsole()" style="height: 200px; width: 50px; transform:translateY(100%)"></div>
     </div>
 
     <!-- Ab hier kommt der Content, welcher für den Nutzer sichtbar sein sollte -->
@@ -58,7 +61,7 @@
         <div class="picHalf" id="idPic-wrapper-flipped"></div>
       </div>
 
-      <div id="connect" (click)="startConnection()" [ngStyle]="{'background-color': getContrastingColor(playerID), 'color': '#' + playerID}">Connect</div>
+      <div id="connect" (click)="startConnection()" [ngStyle]="{'background-color': getContrastingColor(playerID), 'color': '#' + playerID}">Start</div>
 
 
     </div>
