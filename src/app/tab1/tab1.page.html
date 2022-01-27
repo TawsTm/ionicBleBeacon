@@ -26,9 +26,18 @@
         </ion-card-content>
       </ion-list>
 
+      <ion-grid>
+        <ion-item *ngFor="let marker of markers">
+          <ion-label>{{marker.position}}</ion-label>
+          <ion-checkbox slot="end" [(ngModel)]="marker.isChecked" (ngModelChange)="setMarkerState(marker.id)" [disabled]="marker.disabled" ></ion-checkbox>
+        </ion-item>
+      </ion-grid>
+
       <section>
         <ion-button expand="full" color="primary" (click)="startConnection()">Join</ion-button>
       </section>
+
+
 
       <ion-list>
         <ion-item>
@@ -62,7 +71,6 @@
       </div>
 
       <div id="connect" (click)="startConnection()" [ngStyle]="{'background-color': getContrastingColor(playerID), 'color': '#' + playerID}">Start</div>
-
 
     </div>
 

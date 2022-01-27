@@ -6,8 +6,15 @@ import { Platform } from '@ionic/angular';
 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { BluetoothLE } from '@awesome-cordova-plugins/bluetooth-le/ngx';
+import { BluetoothCallbackType, BluetoothLE } from '@awesome-cordova-plugins/bluetooth-le/ngx';
 import { Chart, ChartItem, registerables } from 'node_modules/chart.js';
+
+interface Marker {
+  position: string;
+  id: string;
+  isChecked: boolean;
+  disabled: boolean;
+}
 
 @Component({
   selector: 'app-tab1',
@@ -16,6 +23,14 @@ import { Chart, ChartItem, registerables } from 'node_modules/chart.js';
 })
 
 export class Tab1Page implements OnInit {
+
+  // The markers define, which position of marker the device is taking.
+  public markers: Marker[] = [
+    { position: 'p1', id: '000000', isChecked: false, disabled: false },
+    { position: 'p2', id: '000001', isChecked: false, disabled: false},
+    { position: 'p3', id: '000002', isChecked: false, disabled: false},
+    { position: 'p4', id: '000003', isChecked: false, disabled: false}
+  ];
 
   public device: Device;
   //For the right ionic HTML Mode
@@ -65,7 +80,6 @@ export class Tab1Page implements OnInit {
   ngOnInit() {
     document.getElementById('scan-button').addEventListener('click', this.switchScanState);
     document.getElementById('advertise-button').addEventListener('click', this.switchAdvertiseState);
-    this.drawIdPic(this.playerID);
     //this.url = this.sanitizer.bypassSecurityTrustResourceUrl('http://localhost:8000');
   }
 
@@ -812,9 +826,12 @@ export class Tab1Page implements OnInit {
   };
 
   getContrastingColor(_color: string): string {
-    const rgb = this.hexToRgb(_color);
-    const isLight = rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114 > 186;
-    return isLight ? 'black' : 'white';
+    if(_color && _color !== ''){
+      const rgb = this.hexToRgb(_color);
+      const isLight = rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114 > 186;
+      return isLight ? 'black' : 'white';
+    }
+    return 'black';
   }
 
   hexToRgb(_color: string): {r: number; g: number; b: number} {
@@ -828,9 +845,9 @@ export class Tab1Page implements OnInit {
 
   drawIdPic(_id: string) {
     const contrastColor = this.getContrastingColor(_id);
-    this.log(_id, 'status');
+    this.log('The id is : ' + _id, 'status');
     const id = this.hex2bin(_id);
-    this.log(id, 'status');
+    this.log('The bin-id is : ' + id, 'status');
     const container = document.getElementById('idPic-wrapper');
     const containerFlipped = document.getElementById('idPic-wrapper-flipped');
     for (const i of id) {
@@ -857,6 +874,19 @@ export class Tab1Page implements OnInit {
     this.showConsole = !this.showConsole;
   }
 
+  setMarkerState(_markerID: string) {
+    this.playerID = _markerID;
+    this.log('PlayerID was set to: ' + _markerID, 'status');
+    this.markers.forEach(marker => {
+      if(marker.id !== _markerID) {
+        marker.disabled = !marker.disabled;
+      }
+    });
+    this.drawIdPic(this.playerID);
+    // Don't show connect button anymore and start animation of radar
+    document.getElementById('connect').style.visibility = 'hidden';
+    document.getElementById('radar').style.visibility = 'visible';
+  }
 }
 
 interface DevicePackage {
