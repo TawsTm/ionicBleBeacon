@@ -603,8 +603,11 @@ export class Tab1Page implements OnInit {
               if(i < 6 && i > 1) {
                 fullUUID += '-';
               }
-              fullUUID += uuidBytes[i].toString(16);
+              // needed because 0's would cause the result to be shortened.
+              fullUUID += uuidBytes[i].toString(16).padStart(4, '0');
             }
+
+            this.log('The UUID is: ' + fullUUID, 'status');
 
             // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
             if(fullUUID.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
