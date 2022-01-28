@@ -589,7 +589,7 @@ export class Tab1Page implements OnInit {
             device.lifetime = 0;
 
             //Es sollen nur die letzten 5 RSSI-Werte angezeigt werden.
-            //if (this.calculateDelta(device, _result.rssi)) {
+            if (this.calculateDelta(device, _result.rssi) || device.rssi.length < 3) {
               if(device.rssi.length > 10) {
                 device.rssi.shift();
               }
@@ -602,9 +602,10 @@ export class Tab1Page implements OnInit {
 
               device.chart.update();
             } else {
-              this.log('RSSI wurde übersprungen!', 'status');
+              this.log('RSSI wurde übersprungen!: '+ this.rssiToLinear(_result.rssi), 'status');
+              device.rssi.shift();
             }
-          //}
+          }
         }
         //To update the Angular Components
         this.changeDetection.detectChanges();
@@ -907,24 +908,25 @@ export class Tab1Page implements OnInit {
 
   // Nach Jun Ho S.13-14
   calculateDelta(_device: DevicePackage, _rssi: number): boolean {
-    const threshold = 20;
-    let deltaList: number[];
+    const threshold = 10;
+    const deltaList = [];
     if(_device.rssi.length < 3) {
       return true;
     }
     for (let i = 0; i < _device.rssi.length - 2; i++) {
-      const delta = _device.rssi[i+1] - _device.rssi[i];
+      const delta = (_device.rssi[i+1] - _device.rssi[i]);
       deltaList.push(delta);
     }
-    let averageDelta: number;
+    let averageDelta = 0;
     deltaList.forEach(element => {
       averageDelta += element;
     });
     averageDelta = averageDelta/deltaList.length;
-
+    if(averageDelta < 1) {
+      averageDelta = 1;
+    }
     const currentDelta = _rssi - _device.rssi[_device.rssi.length - 1];
     const deltaRatio = Math.abs(currentDelta/averageDelta);
-    this.log(deltaRatio, 'status');
     let effective: boolean;
     if(deltaRatio < threshold) {
       effective = true;
