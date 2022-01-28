@@ -26,6 +26,7 @@ export class Tab1Page implements OnInit {
 
   // The markers define, which position of marker the device is taking.
   public markers: Marker[] = [
+    { position: 'none', id: '', isChecked: false, disabled: false },
     { position: 'p1', id: '000000', isChecked: false, disabled: false },
     { position: 'p2', id: '000001', isChecked: false, disabled: false},
     { position: 'p3', id: '000002', isChecked: false, disabled: false},
@@ -558,84 +559,11 @@ export class Tab1Page implements OnInit {
         device.device.address === _result.address
       )) {
 
-        // determines if the device takes part in the installation.
-        let subscriber;
-        // is the unique playerID for the found device, if its part of the installation.
-        let playerID;
-        // is the txPowerLevel for each Device.
-        let txPowerLevel;
-
-        // if the found device runs on iOS.
-        if(this.device.platform === 'iOS') {
-          // iOS returns an Object where all Uuids can be read with .serviceUuids
-          const uuid = _result.advertisement.serviceUuids[0];
-          // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
-          if(uuid.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
-
-            // Power Level to probably normalise the RSSI-Data
-            txPowerLevel = _result.advertisement.txPowerLevel;
-
-            // The PlayerID are represented in the last 6 Digits of the UUID
-            playerID = uuid.substring(uuid.length - 6).toLowerCase();
-
-            // True if the Player is part of the installation
-            subscriber = true;
-          }
-          // if the found device runs on Android.
-        } else if (this.device.platform === 'Android') {
-
-          //Android returns a Base64 Code that needs conversion.
-          const advertisementBytes = this.bluetoothle.encodedStringToBytes(_result.advertisement);
-          // conversion returns a Hex-String-Array representation of the advertisement
-          const advertisingData = this.parseAdvertisingData(advertisementBytes);
-          // ServiceKey 0x07 represents a list of all 128-Bit UUID's provided by the advertisement.
-          const SERVICE_DATA_KEY_UUID = '0x07';
-          // get the Uuid's at the ServiceKey-position.
-          const serviceDataUUID = advertisingData[SERVICE_DATA_KEY_UUID];
-
-          // if data is represented then read it.
-          if (serviceDataUUID) {
-
-            // first 16 bytes are the 128 bit UUID/ServiceID.
-            const uuidBytes = new Uint16Array(serviceDataUUID.slice(0,16));
-            let fullUUID = '';
-            for(let i = 7; i >= 0; i--) {
-              if(i < 6 && i > 1) {
-                fullUUID += '-';
-              }
-              // needed because 0's would cause the result to be shortened.
-              fullUUID += uuidBytes[i].toString(16).padStart(4, '0');
-            }
-
-            this.log('The UUID is: ' + fullUUID, 'status');
-
-            // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
-            if(fullUUID.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
-
-              // Power Level to probably normalise the RSSI-Data
-              // ServiceKey 0x0A represents TX Power Level: 0xXX: -127 to +127 dBm.
-              const SERVICE_DATA_KEY_TXPOWER = '0x0a';
-              // get the Uuid's at the ServiceKey-position.
-              const serviceDataTXPOWER = advertisingData[SERVICE_DATA_KEY_TXPOWER];
-              if (serviceDataTXPOWER){
-                const txPowerBytes = new Uint8Array(serviceDataTXPOWER);
-                // Power Level to probably normalise the RSSI-Data
-                txPowerLevel = txPowerBytes.toString();
-              } else {
-                //this.log('There is no readable txPower', 'error');
-              }
-
-              // The PlayerID are represented in the last 6 Digits of the UUID
-              playerID = fullUUID.substring(fullUUID.length - 6).toLowerCase();
-
-              subscriber = true;
-            }
-          }
-        }
+        const playerID = this.checkUUID(_result);
 
         // add a new entry to deviceList if the found device is part of the installation.
         // Falls das Gerät während des sendens, die Adresse wechselt. Sonst hätte man zwei mal die selbe ID im Packet.
-        if(subscriber && (!this.deviceList.some((device) =>
+        if(playerID && (!this.deviceList.some((device) =>
         device.playerID === playerID
         ))) {
           // Create new Chart and give the device all its properties.
@@ -649,36 +577,114 @@ export class Tab1Page implements OnInit {
           document.getElementById(newDevice.device.address).appendChild(newDevice.canvasElement);
 
           this.log('Found Device: ' + playerID, 'status');
-          this.log('txPowerLevel: ' + txPowerLevel, 'success');
         }
 
       } else {
         //Update RSSI For Devices
         for (const device of this.deviceList) {
-          if(device.device.address === _result.address) {
+          // Es wird noch nach Name geprüft, da bei ID wechsel sonst Fehler auftreten könnten.
+          if(device.device.address === _result.address && device.playerID === this.checkUUID(_result)) {
 
             device.device.rssi = _result.rssi;
             device.lifetime = 0;
 
             //Es sollen nur die letzten 5 RSSI-Werte angezeigt werden.
-            if(device.rssi.length > 5) {
-              device.rssi.shift();
+            //if (this.calculateDelta(device, _result.rssi)) {
+              if(device.rssi.length > 10) {
+                device.rssi.shift();
+              }
+              device.rssi.push(_result.rssi);
+
+              device.chart.data.datasets[0].backgroundColor =
+              'rgba(0, ' + (255 - Math.abs(_result.rssi)*2.5) + ', 0 , 0.2)';
+              device.chart.data.datasets[0].borderColor =
+              'rgba(0, ' + (255 - Math.abs(_result.rssi)*2.5) + ', 0 , 0.2)';
+
+              device.chart.update();
+            } else {
+              this.log('RSSI wurde übersprungen!', 'status');
             }
-            device.rssi.push(_result.rssi);
-
-            device.chart.data.datasets[0].backgroundColor =
-            'rgba(0, ' + (255 - Math.abs(_result.rssi)*2.5) + ', 0 , 0.2)';
-            device.chart.data.datasets[0].borderColor =
-            'rgba(0, ' + (255 - Math.abs(_result.rssi)*2.5) + ', 0 , 0.2)';
-
-            device.chart.update();
-          }
+          //}
         }
         //To update the Angular Components
         this.changeDetection.detectChanges();
       }
     }
   };
+
+  checkUUID(_result): string {
+    // determines if the device takes part in the installation.
+    let subscriber;
+    // is the unique playerID for the found device, if its part of the installation.
+    let playerID;
+    // is the txPowerLevel for each Device.
+    let txPowerLevel;
+
+    // if the found device runs on iOS.
+    if(this.device.platform === 'iOS') {
+      // iOS returns an Object where all Uuids can be read with .serviceUuids
+      const uuid = _result.advertisement.serviceUuids[0];
+      // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
+      if(uuid.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
+
+        // Power Level to probably normalise the RSSI-Data
+        txPowerLevel = _result.advertisement.txPowerLevel;
+
+        // The PlayerID are represented in the last 6 Digits of the UUID
+        playerID = uuid.substring(uuid.length - 6).toLowerCase();
+
+      }
+      // if the found device runs on Android.
+    } else if (this.device.platform === 'Android') {
+
+      //Android returns a Base64 Code that needs conversion.
+      const advertisementBytes = this.bluetoothle.encodedStringToBytes(_result.advertisement);
+      // conversion returns a Hex-String-Array representation of the advertisement
+      const advertisingData = this.parseAdvertisingData(advertisementBytes);
+      // ServiceKey 0x07 represents a list of all 128-Bit UUID's provided by the advertisement.
+      const SERVICE_DATA_KEY_UUID = '0x07';
+      // get the Uuid's at the ServiceKey-position.
+      const serviceDataUUID = advertisingData[SERVICE_DATA_KEY_UUID];
+
+      // if data is represented then read it.
+      if (serviceDataUUID) {
+
+        // first 16 bytes are the 128 bit UUID/ServiceID.
+        const uuidBytes = new Uint16Array(serviceDataUUID.slice(0,16));
+        let fullUUID = '';
+        for(let i = 7; i >= 0; i--) {
+          if(i < 6 && i > 1) {
+            fullUUID += '-';
+          }
+          // needed because 0's would cause the result to be shortened.
+          fullUUID += uuidBytes[i].toString(16).padStart(4, '0');
+        }
+
+        // check if provided Uuid matches with installation Uuid (more to the Convention in Installtion Paper)
+        if(fullUUID.toLowerCase().startsWith(this.installationPlayerID.toLowerCase())) {
+
+          // Power Level to probably normalise the RSSI-Data
+          // ServiceKey 0x0A represents TX Power Level: 0xXX: -127 to +127 dBm.
+          const SERVICE_DATA_KEY_TXPOWER = '0x0a';
+          // get the Uuid's at the ServiceKey-position.
+          const serviceDataTXPOWER = advertisingData[SERVICE_DATA_KEY_TXPOWER];
+          if (serviceDataTXPOWER){
+            const txPowerBytes = new Uint8Array(serviceDataTXPOWER);
+            // Power Level to probably normalise the RSSI-Data
+            txPowerLevel = txPowerBytes.toString();
+            //this.log('txPowerLevel: ' + txPowerLevel, 'success');
+          } else {
+            //this.log('There is no readable txPower', 'error');
+          }
+
+          // The PlayerID are represented in the last 6 Digits of the UUID
+          playerID = fullUUID.substring(fullUUID.length - 6).toLowerCase();
+
+        }
+      }
+    }
+    return playerID;
+  }
 
 
  /**
@@ -877,7 +883,8 @@ export class Tab1Page implements OnInit {
     this.showConsole = !this.showConsole;
   }
 
-  setMarkerState(_markerID: string) {
+  async setMarkerState(_markerID: string) {
+    this.stopAdvertising();
     this.playerID = _markerID;
     this.log('PlayerID was set to: ' + _markerID, 'status');
     this.markers.forEach(marker => {
@@ -889,6 +896,42 @@ export class Tab1Page implements OnInit {
     // Don't show connect button anymore and start animation of radar
     document.getElementById('connect').style.visibility = 'hidden';
     document.getElementById('radar').style.visibility = 'visible';
+  }
+
+  // Corrects the RSSI-Signal to linear mapping
+  rssiToLinear(signalLevelInDb: number): number {
+    // Frequenz 2.4 GHz
+    const exp = (27.55 - (20 * Math.log10(24000)) + Math.abs(signalLevelInDb)) / 20.0;
+    return Math.pow(10.0, exp);
+  }
+
+  // Nach Jun Ho S.13-14
+  calculateDelta(_device: DevicePackage, _rssi: number): boolean {
+    const threshold = 20;
+    let deltaList: number[];
+    if(_device.rssi.length < 3) {
+      return true;
+    }
+    for (let i = 0; i < _device.rssi.length - 2; i++) {
+      const delta = _device.rssi[i+1] - _device.rssi[i];
+      deltaList.push(delta);
+    }
+    let averageDelta: number;
+    deltaList.forEach(element => {
+      averageDelta += element;
+    });
+    averageDelta = averageDelta/deltaList.length;
+
+    const currentDelta = _rssi - _device.rssi[_device.rssi.length - 1];
+    const deltaRatio = Math.abs(currentDelta/averageDelta);
+    this.log(deltaRatio, 'status');
+    let effective: boolean;
+    if(deltaRatio < threshold) {
+      effective = true;
+    } else {
+      effective = false;
+    }
+    return effective;
   }
 }
 
