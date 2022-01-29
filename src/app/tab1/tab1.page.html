@@ -51,7 +51,7 @@
         class="device"
         id="{{device.device.address}}">
           <ion-label [ngStyle]="{'color': '#' + device.playerID}">{{device.playerID}}</ion-label>
-          <ion-badge slot="end" [ngStyle]="{'background-color': '#' + device.playerID}">{{rssiToLinear(device.rssi[device.rssi.length - 1])}}</ion-badge>
+          <ion-badge slot="end" [ngStyle]="{'background-color': '#' + device.playerID}">{{getAverage(device.rssi, device.rssi_counts)}}</ion-badge>
         </ion-item>
       </ion-list>
       <div (click)="toggleConsole()" style="height: 200px; width: 50px; transform:translateY(100%)"></div>
