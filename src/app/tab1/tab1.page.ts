@@ -123,7 +123,7 @@ export class Tab1Page implements OnInit {
       const rssiPackage: ServerDataPackage[] = [];
       // Dadurch dass der Average der letzten 3-20 Werte übersendet wird, entsteht eine Abhängigkeit zur Sendefrequenz.
       this.deviceList.forEach(element => {
-        rssiPackage.push({id: element.playerID, rssi: this.getAverage(element.rssi, element.rssi_counts)});
+        rssiPackage.push({id: element.playerID, rssi: this.getAverage(element.rssi, element.rssiCounts)});
       });
       socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     });
@@ -190,7 +190,7 @@ export class Tab1Page implements OnInit {
     this.sendIntervalID = setInterval(update => {
       const rssiPackage: ServerDataPackage[] = [];
       this.deviceList.forEach(element => {
-        rssiPackage.push({id: element.playerID, rssi: this.getAverage(element.rssi, element.rssi_counts)});
+        rssiPackage.push({id: element.playerID, rssi: this.getAverage(element.rssi, element.rssiCounts)});
       });
       socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     }, 1000);
@@ -210,7 +210,8 @@ export class Tab1Page implements OnInit {
 
     // create the new device with dummyElements.
     const newChartElement: DevicePackage =
-      {canvasElement: null, chart: null, device: _device, rssi: [this.rssiToLinear(_device.rssi)], rssi_counts: [true], lifetime: 0, playerID: _id};
+      {canvasElement: null, chart: null,
+        device: _device, rssi: [this.rssiToLinear(_device.rssi)], rssiCounts: [true], lifetime: 0, playerID: _id};
     /*
     // needed for Chart to show.
     Chart.register(...registerables);
@@ -595,10 +596,10 @@ export class Tab1Page implements OnInit {
             // the last 20 rssi-values are saved to calc a median
             if(device.rssi.length > 20) {
               device.rssi.shift();
-              device.rssi_counts.shift();
+              device.rssiCounts.shift();
             }
             // calculate Delta to know if the new RSSI is valid.
-            device.rssi_counts.push(this.calculateDelta(device.rssi, device.rssi_counts, linearRssi));
+            device.rssiCounts.push(this.calculateDelta(device.rssi, device.rssiCounts, linearRssi));
             device.rssi.push(linearRssi);
 
             device.chart.data.datasets[0].backgroundColor =
@@ -607,7 +608,7 @@ export class Tab1Page implements OnInit {
             'rgba(0, ' + (255 - Math.abs(_result.rssi)*2.5) + ', 0 , 0.2)';
 
             device.chart.update();
-            
+
           }
         }
         //To update the Angular Components
@@ -915,9 +916,9 @@ export class Tab1Page implements OnInit {
   calculateDelta(_rssiList: number[], _countsList, _rssi: number): boolean {
     const threshold = 1.5;
     const deltaList = [];
-    
+
     // Damit die Averages nur auf RSSI-Werten basieren, welche auch zählen sollten.
-    const countedRssiList = []
+    const countedRssiList = [];
 
     _rssiList.forEach((rssi, index) => {
       if(_countsList[index]) {
@@ -957,9 +958,9 @@ export class Tab1Page implements OnInit {
   getAverage(_rssiList: number[], _countsList: boolean[]): number {
     let average = 0;
     let count = 0;
-    _rssiList.forEach((number, index) => {
+    _rssiList.forEach((rssi, index) => {
       if(_countsList[index]) {
-        average += number;
+        average += rssi;
         count++;
       }
     });
@@ -974,7 +975,7 @@ interface DevicePackage {
   device: any;
   rssi: number[];
   // Describes if the rssi number at this position counts.
-  rssi_counts: boolean[];
+  rssiCounts: boolean[];
   lifetime: number;
   playerID: string;
 }
