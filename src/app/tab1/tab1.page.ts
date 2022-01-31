@@ -903,15 +903,17 @@ export class Tab1Page implements OnInit {
   }
 
   // Corrects the RSSI-Signal to linear mapping
-  rssiToLinear(signalLevelInDb: number): number {
+  rssiToLinear(_signalLevelInDb: number): number {
     // Frequenz 2.4 GHz
-    const exp = (27.55 - (20 * Math.log10(24000)) + Math.abs(signalLevelInDb)) / 20.0;
+    const exp = (27.55 - (20 * Math.log10(2400)) + Math.abs(_signalLevelInDb)) / 20.0;
+    // This would work too but as 0 distance is represented with about -20, we need a higher base
+    // const exp = Math.abs(_signalLevelInDb) / 20.0;
     return Math.pow(10.0, exp);
   }
 
   // Nach Jun Ho S.13-14
   calculateDelta(_rssiList: number[], _countsList, _rssi: number): boolean {
-    const threshold = 2;
+    const threshold = 1.5;
     const deltaList = [];
     
     // Damit die Averages nur auf RSSI-Werten basieren, welche auch zählen sollten.
