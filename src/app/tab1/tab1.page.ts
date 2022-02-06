@@ -123,7 +123,7 @@ export class Tab1Page implements OnInit {
       const rssiPackage: ServerDataPackage[] = [];
       // Dadurch dass der Average der letzten 3-20 Werte übersendet wird, entsteht eine Abhängigkeit zur Sendefrequenz.
       this.deviceList.forEach(element => {
-        rssiPackage.push({id: element.playerID, rssi: this.getAverage(element.rssi, element.rssiCounts)});
+        rssiPackage.push({id: element.playerID, linearRssi: this.getAverage(element.rssi, element.rssiCounts), rawRssi: element.rssi[element.rssi.length-1]});
       });
       socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     });
@@ -190,7 +190,7 @@ export class Tab1Page implements OnInit {
     this.sendIntervalID = setInterval(update => {
       const rssiPackage: ServerDataPackage[] = [];
       this.deviceList.forEach(element => {
-        rssiPackage.push({id: element.playerID, rssi: this.getAverage(element.rssi, element.rssiCounts)});
+        rssiPackage.push({id: element.playerID, linearRssi: this.getAverage(element.rssi, element.rssiCounts), rawRssi: element.device.rssi});
       });
       socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     }, 1000);
@@ -211,7 +211,7 @@ export class Tab1Page implements OnInit {
     // create the new device with dummyElements.
     const newChartElement: DevicePackage =
       {canvasElement: null, chart: null,
-        device: _device, rssi: [this.rssiToLinear(_device.rssi)], rssiCounts: [true], lifetime: 0, playerID: _id};
+        device: _device, rssi: [this.rssiToLinear(_device.rssi)], rssiCounts: [true], rawRssi: _device.rssi, lifetime: 0, playerID: _id};
     /*
     // needed for Chart to show.
     Chart.register(...registerables);
@@ -976,6 +976,7 @@ interface DevicePackage {
   rssi: number[];
   // Describes if the rssi number at this position counts.
   rssiCounts: boolean[];
+  rawRssi : number[];
   lifetime: number;
   playerID: string;
 }
@@ -992,5 +993,6 @@ interface ExtWebSocket extends WebSocket {
 
 interface ServerDataPackage {
   id: string;
-  rssi: number;
+  linearRssi: number;
+  rawRssi: number;
 }
