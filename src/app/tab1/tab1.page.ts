@@ -595,8 +595,8 @@ export class Tab1Page implements OnInit {
             // der neue RSSI-Wert wird zu einer linearen Darstellung umgerechnet.
             const linearRssi = this.rssiToLinear(_result.rssi);
 
-            // the last 20 rssi-values are saved to calc a median
-            if(device.rssi.length > 20) {
+            // the last 30 rssi-values are saved to calculate the average.
+            if(device.rssi.length > 30) {
               device.rssi.shift();
               device.rssiCounts.shift();
             }
@@ -913,10 +913,19 @@ export class Tab1Page implements OnInit {
     // const exp = Math.abs(_signalLevelInDb) / 20.0;
     // return Math.pow(10.0, exp);
     // Friis Transmission Equation
-    return Math.sqrt(0.0000515625 / (Math.pow(4*Math.PI, 2) * Math.pow(10, _signalLevelInDb/10)));
+    return Math.sqrt((0.0033*Math.pow(0.125,2)) / (Math.pow(4*Math.PI, 2) * Math.pow(10, _signalLevelInDb/10)));
   }
 
-  // Nach Jun Ho S.13-14
+  /**
+   * This function calculates a delta which determines if the next incoming RSSI-Value is valid or to far of.
+   * Principle of Jun Ho S.13-14.
+   * Should take the linear RSSI to better determine the average.
+   *
+   * @param _rssiList The List of the last 30 RSSI Values in linear representation.
+   * @param _countsList Companion of the _rssiList which tells us which of the RSSI-Values have been valid.
+   * @param _rssi The new RSSI value that needs to be checked.
+   * @returns _rssi is valid (true) or not (false).
+   */
   calculateDelta(_rssiList: number[], _countsList, _rssi: number): boolean {
     const threshold = 1.5;
     const deltaList = [];
@@ -936,8 +945,8 @@ export class Tab1Page implements OnInit {
       return true;
     }
 
-    for (let i = 0; i < countedRssiList.length - 2; i++) {
-      const delta = (countedRssiList[i+1] - countedRssiList[i]);
+    for (let i = 0; i < _rssiList.length - 2; i++) {
+      const delta = (_rssiList[i+1] - _rssiList[i]);
       deltaList.push(delta);
     }
     let averageDelta = 0;
@@ -948,7 +957,7 @@ export class Tab1Page implements OnInit {
     if(averageDelta < 1) {
       averageDelta = 1;
     }
-    const currentDelta = _rssi - countedRssiList[countedRssiList.length - 1];
+    const currentDelta = _rssi - _rssiList[_rssiList.length - 1];
     const deltaRatio = Math.abs(currentDelta/averageDelta);
     let effective: boolean;
     if(deltaRatio < threshold) {
