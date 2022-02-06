@@ -123,7 +123,8 @@ export class Tab1Page implements OnInit {
       const rssiPackage: ServerDataPackage[] = [];
       // Dadurch dass der Average der letzten 3-20 Werte übersendet wird, entsteht eine Abhängigkeit zur Sendefrequenz.
       this.deviceList.forEach(element => {
-        rssiPackage.push({id: element.playerID, linearRssi: this.getAverage(element.rssi, element.rssiCounts), rawRssi: element.rssi[element.rssi.length-1]});
+        rssiPackage.push({id: element.playerID, linearRssi: this.getAverage(element.rssi, element.rssiCounts),
+          rawRssi: element.rssi[element.rssi.length-1]});
       });
       socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     });
@@ -190,7 +191,8 @@ export class Tab1Page implements OnInit {
     this.sendIntervalID = setInterval(update => {
       const rssiPackage: ServerDataPackage[] = [];
       this.deviceList.forEach(element => {
-        rssiPackage.push({id: element.playerID, linearRssi: this.getAverage(element.rssi, element.rssiCounts), rawRssi: element.device.rssi});
+        rssiPackage.push({id: element.playerID, linearRssi: this.getAverage(element.rssi, element.rssiCounts),
+          rawRssi: element.device.rssi});
       });
       socket.send(JSON.stringify({id: this.playerID, list: rssiPackage}));
     }, 1000);
@@ -908,8 +910,10 @@ export class Tab1Page implements OnInit {
     // Frequenz 2.4 GHz
     // const exp = (27.55 - (20 * Math.log10(2400)) + Math.abs(_signalLevelInDb)) / 20.0;
     // This would work too but as 0 distance is represented with about -20, we need a higher base
-    const exp = Math.abs(_signalLevelInDb) / 20.0;
-    return Math.pow(10.0, exp);
+    // const exp = Math.abs(_signalLevelInDb) / 20.0;
+    // return Math.pow(10.0, exp);
+    // Friis Transmission Equation
+    return Math.sqrt(0.0000515625 / (Math.pow(4*Math.PI, 2) * Math.pow(10, _signalLevelInDb/10)));
   }
 
   // Nach Jun Ho S.13-14
@@ -976,7 +980,7 @@ interface DevicePackage {
   rssi: number[];
   // Describes if the rssi number at this position counts.
   rssiCounts: boolean[];
-  rawRssi : number[];
+  rawRssi: number[];
   lifetime: number;
   playerID: string;
 }
