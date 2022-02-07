@@ -908,12 +908,9 @@ export class Tab1Page implements OnInit {
   // Corrects the RSSI-Signal to linear mapping
   rssiToLinear(_signalLevelInDb: number): number {
     // Frequenz 2.4 GHz
-    // const exp = (27.55 - (20 * Math.log10(2400)) + Math.abs(_signalLevelInDb)) / 20.0;
-    // This would work too but as 0 distance is represented with about -20, we need a higher base
-    // const exp = Math.abs(_signalLevelInDb) / 20.0;
-    // return Math.pow(10.0, exp);
-    // Friis Transmission Equation
-    return Math.sqrt((0.0033*Math.pow(0.125,2)) / (Math.pow(4*Math.PI, 2) * Math.pow(10, _signalLevelInDb/10)));
+    // Friis Transmission Equation after Paper...
+    // return Math.sqrt((0.0033*Math.pow(0.125,2)) / (Math.pow(4*Math.PI, 2) * Math.pow(10, _signalLevelInDb/10)));
+    return 1/(32*Math.exp( ((20+_signalLevelInDb)*Math.log(10)) / 20 ) * Math.PI);
   }
 
   /**
