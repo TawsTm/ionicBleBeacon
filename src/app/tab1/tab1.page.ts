@@ -534,15 +534,6 @@ export class Tab1Page implements OnInit {
     }).join(''));
   };
 
-  //not used anymore
-  /*bin2String(array) {
-    let result = '';
-    for (const x of array) {
-       result += String.fromCharCode(parseInt(x, 2));
-    }
-    return result;
-  }*/
-
   /**
    * handles the results of the Scan for devices with BLE-Advertisment.
    *
@@ -905,11 +896,23 @@ export class Tab1Page implements OnInit {
     document.getElementById('radar').style.visibility = 'visible';
   }
 
+  // This function coorects given 127 values out of the data
+  correct127s(_data: number[][]): number[][] {
+    const newData: number[][] = [];
+    _data.forEach(data => {
+        if(data[1] !== 127) {
+            newData.push(data);
+        }
+    });
+    return newData;
+  }
+
   // Corrects the RSSI-Signal to linear mapping
   rssiToLinear(_signalLevelInDb: number): number {
     // Frequenz 2.4 GHz
     // Friis Transmission Equation after Paper...
     // return Math.sqrt((0.0033*Math.pow(0.125,2)) / (Math.pow(4*Math.PI, 2) * Math.pow(10, _signalLevelInDb/10)));
+    // abgeleitet durch Friis Transmission Equation mit 100mW (20dbm) sendePower.
     return 1/(32*Math.exp( ((20+_signalLevelInDb)*Math.log(10)) / 20 ) * Math.PI);
   }
 
