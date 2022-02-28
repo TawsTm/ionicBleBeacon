@@ -24,7 +24,9 @@ interface Marker {
 
 export class Tab1Page implements OnInit {
 
-  // The markers define, which position of marker the device is taking.
+  /**
+   * These markers can be used in the developer mode to set the four given IDs before connection to the server
+   */
   public markers: Marker[] = [
     { position: 'none', id: '', isChecked: false, disabled: false },
     { position: 'p1', id: '000000', isChecked: false, disabled: false },
@@ -38,7 +40,7 @@ export class Tab1Page implements OnInit {
   public deviceMode: string;
   public bluetoothle: BluetoothLE;
   public deviceList: DevicePackage[] = [];
-  //128Bit Letters in Hexadezimal from 0-F. (minus 6 Letters) am ende gelöscht 79
+  //128Bit Letters in Hexadezimal from 0-F. (minus 6 Letters)
   installationPlayerID = '73f97f9e-5c59-44da-bd1a-c16582';
   //The end of the UUID represents the PlayerID
   playerID: string;
@@ -81,7 +83,6 @@ export class Tab1Page implements OnInit {
   ngOnInit() {
     document.getElementById('scan-button').addEventListener('click', this.switchScanState);
     document.getElementById('advertise-button').addEventListener('click', this.switchAdvertiseState);
-    //this.url = this.sanitizer.bypassSecurityTrustResourceUrl('http://localhost:8000');
   }
 
   startConnection() {
@@ -97,10 +98,8 @@ export class Tab1Page implements OnInit {
       }
     }, 3000);
 
-    //this.log(output.rssi, 'status');
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
   /**
    * Hier wird mit dem Server kommuniziert, um gesammelte Daten an den zentralen
    * Punkt zu senden und um sich für die Intallation als Teilnehmer eine einseutige ID zu holen.
@@ -110,8 +109,6 @@ export class Tab1Page implements OnInit {
   dataRequest(type: string = 'initialize') {
 
     // The Websocket of the Device, the Server is running on.
-    // Laptop IP: ws://192.168.178.36:3000/api
-    // Desktop IP: ws://192.168.0.175:3000/api
     const dataWs = 'ws://blebeacon.loca.lt';
 
     // Websocket approach
@@ -202,6 +199,7 @@ export class Tab1Page implements OnInit {
   /**
    * create a chart for displaying RSSI-values on a graph.
    * create a deviceList Element.
+   * Currently disabled because of performance reasons
    *
    * @param _device is the device with all its informations
    *                that comes over advertisement like RSSI & Co.
@@ -295,7 +293,7 @@ export class Tab1Page implements OnInit {
   };
 
   /**
-   * Wenn ein Error beim Scan auftritt
+   * triggered if an error occurs on scan and displays the error
    *
    * @param _error the error message that should be printed.
    */
@@ -335,7 +333,12 @@ export class Tab1Page implements OnInit {
     document.getElementById(_serviceUuid + '.' + _characteristicUuid).textContent = _value;
   };
 
-  // Um dem Nutzer Output zu zeigen und zum debuggen.
+  /**
+   * To log onto the smartdevice console
+   *
+   * @param _msg the message that needs to be printed
+   * @param _level the type of massage that needs to be printed
+   */
   log = (_msg, _level?) => {
 
     _level = _level || 'log';
@@ -610,6 +613,12 @@ export class Tab1Page implements OnInit {
     }
   };
 
+  /**
+   * Checks if the given device is part of the installation
+   *
+   * @param _result the given device
+   * @returns the playerID if the device is part of the installation, else an empty string
+   */
   checkUUID(_result): string {
     // determines if the device takes part in the installation.
     let subscriber;
@@ -832,6 +841,12 @@ export class Tab1Page implements OnInit {
     }
   };
 
+  /**
+   * This function tells if black or white is the better contrast for the given color
+   *
+   * @param _color the color that needs a contrast
+   * @returns the contrastcolor
+   */
   getContrastingColor(_color: string): string {
     if(_color && _color !== ''){
       const rgb = this.hexToRgb(_color);
@@ -841,6 +856,12 @@ export class Tab1Page implements OnInit {
     return 'black';
   }
 
+  /**
+   * this function converts a hex color to RGB
+   *
+   * @param _color the hex color that needs to be converted to RGB
+   * @returns the RGB color
+   */
   hexToRgb(_color: string): {r: number; g: number; b: number} {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(_color);
     return result ? {
@@ -850,6 +871,11 @@ export class Tab1Page implements OnInit {
     } : null;
   }
 
+  /**
+   * Draws an unique ID picture out of the PlayerID
+   *
+   * @param _id of the User
+   */
   drawIdPic(_id: string) {
     const contrastColor = this.getContrastingColor(_id);
     this.log('The id is : ' + _id, 'status');
@@ -868,10 +894,19 @@ export class Tab1Page implements OnInit {
     }
   }
 
+  /**
+   * converts hex to binary
+   *
+   * @param hex hex input
+   * @returns the binary number
+   */
   hex2bin(hex){
     return (parseInt(hex, 16).toString(2)).padStart(24, '0');
   }
 
+  /**
+   * shows the console on toggle
+   */
   toggleConsole() {
     if(!this.showConsole) {
       document.getElementById('dev').style.transform = 'translateY(0%)';
@@ -896,7 +931,12 @@ export class Tab1Page implements OnInit {
     document.getElementById('radar').style.visibility = 'visible';
   }
 
-  // This function coorects given 127 values out of the data
+  /**
+   * This function coorects given 127 values out of the data
+   *
+   * @param _data the input data that needs to be corrected
+   * @returns the corrected data without 127s
+   */
   correct127s(_data: number[][]): number[][] {
     const newData: number[][] = [];
     _data.forEach(data => {
@@ -907,13 +947,17 @@ export class Tab1Page implements OnInit {
     return newData;
   }
 
-  // Corrects the RSSI-Signal to linear mapping
-  rssiToLinear(_signalLevelInDb: number): number {
+  /**
+   * Corrects the RSSI-Signal to linear mapping
+   *
+   * @param _signalLevelInDb the RSSI value
+   * @param _n the pathloss exponent
+   * @returns the linearised RSSI
+   */
+  rssiToLinear(_signalLevelInDb: number, _n: number = 2.25): number {
     // Frequenz 2.4 GHz
-    // Friis Transmission Equation after Paper...
-    // return Math.sqrt((0.0033*Math.pow(0.125,2)) / (Math.pow(4*Math.PI, 2) * Math.pow(10, _signalLevelInDb/10)));
-    // abgeleitet durch Friis Transmission Equation mit 100mW (20dbm) sendePower.
-    return 1/(32*Math.exp( ((20+_signalLevelInDb)*Math.log(10)) / 20 ) * Math.PI);
+    // Log Distance Path Loss Model
+    return Math.exp(-(((_signalLevelInDb+40.05)*Math.log(10))/(10*_n)));
   }
 
   /**
@@ -968,6 +1012,13 @@ export class Tab1Page implements OnInit {
     return effective;
   }
 
+  /**
+   * calculates the mean of numbers that need to be taken in consideration
+   *
+   * @param _rssiList the list of RSSI values
+   * @param _countsList the list that says which rssi values to count
+   * @returns the mean of the counted rssi values
+   */
   getAverage(_rssiList: number[], _countsList: boolean[]): number {
     let average = 0;
     let count = 0;
